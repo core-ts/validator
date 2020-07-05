@@ -6,6 +6,7 @@ export enum Type {
   Number = 'number',
   Integer = 'integer',
   String = 'string',
+  Text = 'text',
 
   Object = 'object',
   Array = 'array',
@@ -202,7 +203,8 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
         }
       } else {
         switch (attr.type) {
-          case Type.String: {
+          case Type.String:
+          case Type.Text: {
             if (typeof v !== 'string') {
               errors.push(createError(path, na, 'string'));
             } else {
