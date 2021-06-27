@@ -1,48 +1,26 @@
-export enum Type {
-  ObjectId = 'ObjectId',
-  Date = 'date',
-  Boolean = 'boolean',
-
-  Number = 'number',
-  Integer = 'integer',
-  String = 'string',
-  Text = 'text',
-
-  Object = 'object',
-  Array = 'array',
-  Primitives =  'primitives',
-  Binary = 'binary'
-}
-
-export enum Format {
-  Currency = 'currency',
-  Percentage = 'percentage',
-
-  Email = 'email',
-  Url = 'url',
-  Phone = 'phone',
-  Fax = 'fax',
-
-  IPv4 = 'ipv4',
-  IPv6 = 'ipv6',
-}
-
+export type DataType = 'ObjectId' | 'date' | 'datetime' | 'time'
+    | 'boolean' | 'number' | 'integer' | 'string' | 'text'
+    | 'object' | 'array' | 'primitives' | 'binary';
+export type FormatType = 'currency' | 'percentage' | 'email' | 'url' | 'phone' | 'fax' | 'ipv4' | 'ipv6';
 
 export interface ErrorMessage {
   field: string;
   code: string;
   param?: string|number|Date;
+  message?: string;
 }
 
-export interface Metadata {
-  attributes: any;
+export interface Model {
+  attributes: Attributes;
 }
 
 export interface Attribute {
   name?: string;
-  type: Type;
-  format?: Format;
+  type?: DataType;
+  format?: FormatType;
   required?: boolean;
+  key?: boolean;
+  nopatch?: boolean;
   length?: number;
   min?: number;
   max?: number;
@@ -50,12 +28,19 @@ export interface Attribute {
   lt?: number;
   exp?: RegExp|string;
   code?: string;
-  typeof?: Metadata;
+  typeof?: Model;
+}
+export interface Attributes {
+  [key: string]: Attribute;
 }
 
+export interface Phones {
+  [key: string]: string;
+}
 // tslint:disable-next-line:class-name
 export class resources {
-  static phonecodes: any = null;
+  static phonecodes: Phones;
+  static ignoreDate?: boolean;
   static digit = /^\d+$/;
   static email = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,4})$/i;
   static url = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
@@ -186,10 +171,12 @@ function handleMinMax(v: number|Date, attr: Attribute, path: string, errors: Err
     }
   }
 }
-function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: string, max?: number, allowUndefined?: boolean): void {
+function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[], path: string, allowUndefined?: boolean, max?: number, patch?: boolean): void {
   const keys = Object.keys(obj);
+  let count = 0;
   for (const key of keys) {
-    const attr: Attribute = meta.attributes[key];
+    count = count + 1;
+    const attr: Attribute = attributes[key];
     if (!attr) {
       if (!allowUndefined) {
         errors.push(createError(path, key, 'undefined'));
@@ -198,15 +185,17 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
       const na = attr.name;
       const v = obj[na];
       if (!v) {
-        if (attr.required) {
+        if (attr.required && !patch) {
           errors.push(createError(path, na, 'required'));
         }
       } else {
         switch (attr.type) {
-          case Type.String:
-          case Type.Text: {
+          case undefined:
+          case 'string':
+          case 'text': {
             if (typeof v !== 'string') {
               errors.push(createError(path, na, 'string'));
+              return;
             } else {
               if (v.length === 0) {
                 if (attr.required) {
@@ -221,27 +210,39 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
                 }
                 if (attr.format) {
                   switch (attr.format) {
-                    case Format.Email: {
+                    case 'email': {
                       if (!isEmail(v)) {
                         errors.push(createError(path, na, 'email'));
                       }
                       break;
                     }
-                    case Format.Url: {
+                    case 'url': {
                       if (!isUrl(v)) {
                         errors.push(createError(path, na, 'url'));
                       }
                       break;
                     }
-                    case Format.Phone: {
+                    case 'phone': {
                       if (!tel.isPhone(v)) {
                         errors.push(createError(path, na, 'phone'));
                       }
                       break;
                     }
-                    case Format.Fax: {
+                    case 'fax': {
                       if (!tel.isFax(v)) {
                         errors.push(createError(path, na, 'fax'));
+                      }
+                      break;
+                    }
+                    case 'ipv4': {
+                      if (!isIPv4(v)) {
+                        errors.push(createError(path, na, 'ipv4'));
+                      }
+                      break;
+                    }
+                    case 'ipv6': {
+                      if (!isIPv6(v)) {
+                        errors.push(createError(path, na, 'ipv6'));
                       }
                       break;
                     }
@@ -267,11 +268,12 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
             }
             break;
           }
-          case Type.Number:
-          case Type.Integer: {
+          case 'number':
+          case 'integer': {
             // If value is not number
             if (typeof v !== 'number') {
               errors.push(createError(path, na, 'number'));
+              return;
             } else {
               handleMinMax(v, attr, path, errors);
             }
@@ -280,12 +282,12 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
             }
             break;
           }
-          case Type.Date: {
-            // If value is not date
+          case 'datetime':
             const date = toDate(v);
             const error = date.toString();
             if (!(date instanceof Date) || error === 'Invalid Date') {
               errors.push(createError(path, na, 'date'));
+              return;
             } else {
               handleMinMax(v, attr, path, errors);
             }
@@ -293,26 +295,43 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
               return;
             }
             break;
+          case 'date': {
+            if (resources.ignoreDate) {
+              const date2 = toDate(v);
+              const error2 = date2.toString();
+              if (!(date2 instanceof Date) || error2 === 'Invalid Date') {
+                errors.push(createError(path, na, 'date'));
+                return;
+              } else {
+                handleMinMax(v, attr, path, errors);
+              }
+              if (errors.length >= max) {
+                return;
+              }
+            }
+            break;
           }
-          case Type.Boolean: {
+          case 'boolean': {
             // If value is not bool
             if ((typeof v === 'boolean') !== true) {
               errors.push(createError(path, na, 'boolean'));
+              return;
             }
             if (errors.length >= max) {
               return;
             }
             break;
           }
-          case Type.Object: {
+          case 'object': {
             if (typeof v !== 'object') {
               errors.push(createError(path, na, 'object'));
+              return;
             } else {
               if (Array.isArray(v)) {
                 errors.push(createError(path, na, 'object'));
               } else {
                 const x = (path != null && path.length > 0 ? path + '.' + key : key);
-                validateObject(v, attr.typeof, errors, x);
+                validateObject(v, attr.typeof.attributes, errors, x);
               }
             }
             if (errors.length >= max) {
@@ -320,9 +339,10 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
             }
             break;
           }
-          case Type.Array: {
+          case 'array': {
             if (typeof v !== 'object') {
               errors.push(createError(path, na, 'array'));
+              return;
             } else {
               if (!Array.isArray(v)) {
                 errors.push(createError(path, na, 'array'));
@@ -342,7 +362,7 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
                     }
                   } else {
                     const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
-                    validateObject(v[i], attr.typeof, errors, y);
+                    validateObject(v[i], attr.typeof.attributes, errors, y);
                   }
                 }
               }
@@ -352,20 +372,22 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
             }
             break;
           }
-          case Type.Primitives: {
+          case 'primitives': {
             if (typeof v !== 'object') {
               errors.push(createError(path, na, 'array'));
+              return;
             } else {
               if (!Array.isArray(v)) {
                 errors.push(createError(path, na, 'array'));
+                return;
               } else {
                 if (attr.code) {
                   if (attr.code === 'date') {
                     for (let i = 0; i < v.length; i++) {
                       if (v[i]) {
-                        const date = toDate(v);
-                        const error = date.toString();
-                        if (!(date instanceof Date) || error === 'Invalid Date') {
+                        const date3 = toDate(v);
+                        const error3 = date.toString();
+                        if (!(date3 instanceof Date) || error3 === 'Invalid Date') {
                           const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                           const err = createError('', y, 'date');
                           errors.push(err);
@@ -408,15 +430,79 @@ function validateObject(obj: any, meta: Metadata, errors: ErrorMessage[], path: 
       }
     }
   }
+  if (patch) {
+    return;
+  }
+  const aks = Object.keys(attributes);
+  if (!allowUndefined) {
+    if (count >= aks.length) {
+      return;
+    }
+  }
+  checkUndefined(obj, attributes, errors, aks);
 }
-
-export function validate(obj: any, meta: Metadata, max?: number, allowUndefined?: boolean): ErrorMessage[] {
+export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessage[], keys?: string[]): void {
+  if (!keys) {
+    keys = Object.keys(attrs);
+  }
+  for (const key of keys) {
+    const attr = attrs[key];
+    if (attr.required) {
+      const v = obj[key];
+      if (!v) {
+        errors.push(createError('', key, 'required'));
+      }
+    }
+  }
+}
+export function validate(obj: any, attributes: Attributes, allowUndefined?: boolean, max?: number, patch?: boolean): ErrorMessage[] {
   const errors: ErrorMessage[] = [];
   const path = '';
   if (max == null) {
-    validateObject(obj, meta, errors, path, undefined, allowUndefined);
-  } else {
-    validateObject(obj, meta, errors, path, max, allowUndefined);
+    max = undefined;
+  }
+  validateObject(obj, attributes, errors, path, allowUndefined, max, patch);
+  return errors;
+}
+
+export class Validator<T> {
+  max: number;
+  constructor(public attributes: Attributes, public allowUndefined?: boolean, max?: number) {
+    this.max = (max ? max : 5);
+    this.validate = this.validate.bind(this);
+  }
+  validate(obj: T, patch?: boolean): Promise<ErrorMessage[]> {
+    const errors = validate(obj, this.attributes, this.allowUndefined, undefined, patch);
+    return Promise.resolve(errors);
+  }
+}
+export function createValidator<T>(attributes: Attributes, allowUndefined?: boolean, max?: number): Validator<T> {
+  const v = new Validator(attributes, allowUndefined, max);
+  return v;
+}
+/*
+export function removeRequiredErrors(errs: ErrorMessage[]): ErrorMessage[] {
+  const errors: ErrorMessage[] = [];
+  for (const err of errs) {
+    if (err.code === 'required' && err.field.indexOf('.') < 0) {
+      errors.push(err);
+    }
   }
   return errors;
 }
+export interface ValidatorContainer<T> {
+  metadata: Model;
+  validate?: (obj: T, patch?: boolean) => Promise<ErrorMessage[]>;
+}
+export function setValidator<T>(c: ValidatorContainer<T>, allowUndefined?: boolean, max?: number): ValidatorContainer<T> {
+  const v = new Validator<T>(c.metadata.attributes, allowUndefined, max);
+  c.validate = v.validate;
+  return c;
+}
+export function setValidators<T>(cs: ValidatorContainer<T>[], allowUndefined?: boolean, max?: number): ValidatorContainer<T>[] {
+  for (const c of cs) {
+    setValidator(c);
+  }
+  return cs;
+}
+*/
