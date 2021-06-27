@@ -480,29 +480,3 @@ export function createValidator<T>(attributes: Attributes, allowUndefined?: bool
   const v = new Validator(attributes, allowUndefined, max);
   return v;
 }
-/*
-export function removeRequiredErrors(errs: ErrorMessage[]): ErrorMessage[] {
-  const errors: ErrorMessage[] = [];
-  for (const err of errs) {
-    if (err.code === 'required' && err.field.indexOf('.') < 0) {
-      errors.push(err);
-    }
-  }
-  return errors;
-}
-export interface ValidatorContainer<T> {
-  metadata: Model;
-  validate?: (obj: T, patch?: boolean) => Promise<ErrorMessage[]>;
-}
-export function setValidator<T>(c: ValidatorContainer<T>, allowUndefined?: boolean, max?: number): ValidatorContainer<T> {
-  const v = new Validator<T>(c.metadata.attributes, allowUndefined, max);
-  c.validate = v.validate;
-  return c;
-}
-export function setValidators<T>(cs: ValidatorContainer<T>[], allowUndefined?: boolean, max?: number): ValidatorContainer<T>[] {
-  for (const c of cs) {
-    setValidator(c);
-  }
-  return cs;
-}
-*/
