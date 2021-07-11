@@ -19,8 +19,6 @@ export interface Attribute {
   type?: DataType;
   format?: FormatType;
   required?: boolean;
-  key?: boolean;
-  nopatch?: boolean;
   length?: number;
   min?: number;
   max?: number;
@@ -28,7 +26,7 @@ export interface Attribute {
   lt?: number;
   exp?: RegExp|string;
   code?: string;
-  typeof?: Model;
+  typeof?: Attributes;
 }
 export interface Attributes {
   [key: string]: Attribute;
@@ -331,7 +329,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                 errors.push(createError(path, na, 'object'));
               } else {
                 const x = (path != null && path.length > 0 ? path + '.' + key : key);
-                validateObject(v, attr.typeof.attributes, errors, x);
+                validateObject(v, attr.typeof, errors, x);
               }
             }
             if (errors.length >= max) {
@@ -362,7 +360,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                     }
                   } else {
                     const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
-                    validateObject(v[i], attr.typeof.attributes, errors, y);
+                    validateObject(v[i], attr.typeof, errors, y);
                   }
                 }
               }

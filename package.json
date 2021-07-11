@@ -1,6 +1,6 @@
 {
   "name": "validator-x",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Validate data",
   "main": "./lib/index.js",
   "types": "./src/index.ts",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com/common-ts/validator"
+    "url": "git@github.com/core-ts/validator"
   },
   "keywords": [
     "validator"
