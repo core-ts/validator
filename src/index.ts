@@ -24,6 +24,8 @@ export interface Attribute {
   max?: number;
   gt?: number;
   lt?: number;
+  precision?: number;
+  scale?: number;
   exp?: RegExp|string;
   code?: string;
   typeof?: Attributes;
@@ -105,6 +107,43 @@ export function isEmail(email: string): boolean {
 }
 export function isUrl(url: string): boolean {
   return resources.url.test(url);
+}
+export function isValidScale(n: number, scale: number): boolean {
+  if (isNaN(n) || n === undefined || n == null) {
+    return true;
+  }
+  if (scale === undefined || scale == null || scale < 0) {
+    return true;
+  }
+  const s = n.toString();
+  const i = s.indexOf('.');
+  if (i < 0) {
+    return true;
+  }
+  const s2 = s.substr(i + 1);
+  return (s2.length <= scale);
+}
+export function isValidPrecision(n: number, precision: number, scale?: number): boolean {
+  if (isNaN(n) || n === undefined || n == null) {
+    return true;
+  }
+  if (precision === undefined || precision == null || precision < 0) {
+    return isValidScale(n, scale);
+  }
+  if (scale === undefined || scale == null || scale < 0) {
+    scale = 0;
+  }
+  const s = n.toString();
+  const i = s.indexOf('.');
+  if (i < 0) {
+    return (s.length <= (precision - scale));
+  }
+  const s2 = s.substr(i + 1);
+  if (s2.length > scale) {
+    return false;
+  }
+  const s3 = s.substr(0, i);
+  return (s3.length <= (precision - scale));
 }
 
 function createError(path: string, name: string, code: string, param?: string|number|Date): ErrorMessage {
@@ -273,6 +312,15 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
               errors.push(createError(path, na, 'number'));
               return;
             } else {
+              if (!attr.precision) {
+                if (!isValidScale(v, attr.scale)) {
+                  errors.push(createError(path, na, 'scale'));
+                }
+              } else {
+                if (!isValidPrecision(v, attr.precision, attr.scale)) {
+                  errors.push(createError(path, na, 'precision'));
+                }
+              }
               handleMinMax(v, attr, path, errors);
             }
             if (errors.length >= max) {
