@@ -108,7 +108,7 @@ export function isEmail(email: string): boolean {
 export function isUrl(url: string): boolean {
   return resources.url.test(url);
 }
-export function isValidScale(n: number, scale: number): boolean {
+export function isValidScale(n: number, scale?: number): boolean {
   if (isNaN(n) || n === undefined || n == null) {
     return true;
   }
@@ -163,8 +163,8 @@ function createError(path: string, name: string, code: string, param?: string|nu
 
 const _datereg = '/Date(';
 const _re = /-?\d+/;
-function toDate(v: any) {
-  if (!v || v === '') {
+function toDate(v: any): Date | null | undefined {
+  if (!v) {
     return null;
   }
   if (v instanceof Date) {
@@ -175,20 +175,27 @@ function toDate(v: any) {
   const i = v.indexOf(_datereg);
   if (i >= 0) {
     const m = _re.exec(v);
-    const d = parseInt(m[0], null);
-    return new Date(d);
+    if (m !== null) {
+      const d = parseInt(m[0], 10);
+      return new Date(d);
+    } else {
+      return null;
+    }
   } else {
     if (isNaN(v)) {
       return new Date(v);
     } else {
-      const d = parseInt(v, null);
+      const d = parseInt(v, 10);
       return new Date(d);
     }
   }
 }
 
 function handleMinMax(v: number|Date, attr: Attribute, path: string, errors: ErrorMessage[]): void {
-  const na = attr.name;
+  let na = attr.name;
+  if (!na) {
+    na = '';
+  }
   if (attr.min) {
     if (v < attr.min) {
       errors.push(createError(path, na, 'min', attr.min));
@@ -219,6 +226,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
         errors.push(createError(path, key, 'undefined'));
       }
     } else {
+      attr.name = key;
       const na = attr.name;
       const v = obj[na];
       if (!v) {
@@ -300,7 +308,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                 }
               }
             }
-            if (errors.length >= max) {
+            if (max !== undefined && errors.length >= max) {
               return;
             }
             break;
@@ -323,36 +331,46 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
               }
               handleMinMax(v, attr, path, errors);
             }
-            if (errors.length >= max) {
+            if (max !== undefined && errors.length >= max) {
               return;
             }
             break;
           }
           case 'datetime':
             const date = toDate(v);
-            const error = date.toString();
-            if (!(date instanceof Date) || error === 'Invalid Date') {
-              errors.push(createError(path, na, 'date'));
-              return;
-            } else {
-              handleMinMax(v, attr, path, errors);
-            }
-            if (errors.length >= max) {
-              return;
+            if (date) {
+              const error = date.toString();
+              if (!(date instanceof Date) || error === 'Invalid Date') {
+                errors.push(createError(path, na, 'date'));
+                return;
+              } else {
+                if (!(v instanceof Date)) {
+                  obj[na] = date;
+                }
+                handleMinMax(v, attr, path, errors);
+              }
+              if (max !== undefined && errors.length >= max) {
+                return;
+              }
             }
             break;
           case 'date': {
             if (resources.ignoreDate) {
               const date2 = toDate(v);
-              const error2 = date2.toString();
-              if (!(date2 instanceof Date) || error2 === 'Invalid Date') {
-                errors.push(createError(path, na, 'date'));
-                return;
-              } else {
-                handleMinMax(v, attr, path, errors);
-              }
-              if (errors.length >= max) {
-                return;
+              if (date2) {
+                const error2 = date2.toString();
+                if (!(date2 instanceof Date) || error2 === 'Invalid Date') {
+                  errors.push(createError(path, na, 'date'));
+                  return;
+                } else {
+                  if (!(v instanceof Date)) {
+                    obj[na] = date;
+                  }
+                  handleMinMax(v, attr, path, errors);
+                }
+                if (max !== undefined && errors.length >= max) {
+                  return;
+                }
               }
             }
             break;
@@ -363,7 +381,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
               errors.push(createError(path, na, 'boolean'));
               return;
             }
-            if (errors.length >= max) {
+            if (max !== undefined && errors.length >= max) {
               return;
             }
             break;
@@ -375,12 +393,12 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
             } else {
               if (Array.isArray(v)) {
                 errors.push(createError(path, na, 'object'));
-              } else {
+              } else if (attr.typeof) {
                 const x = (path != null && path.length > 0 ? path + '.' + key : key);
                 validateObject(v, attr.typeof, errors, x);
               }
             }
-            if (errors.length >= max) {
+            if (max !== undefined && errors.length >= max) {
               return;
             }
             break;
@@ -403,17 +421,17 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                   if (typeof v !== 'object') {
                     const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                     errors.push(createError('', y, 'object'));
-                    if (errors.length >= max) {
+                    if (max !== undefined && errors.length >= max) {
                       return;
                     }
-                  } else {
+                  } else if (attr.typeof) {
                     const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                     validateObject(v[i], attr.typeof, errors, y);
                   }
                 }
               }
             }
-            if (errors.length >= max) {
+            if (max !== undefined && errors.length >= max) {
               return;
             }
             break;
@@ -432,13 +450,15 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                     for (let i = 0; i < v.length; i++) {
                       if (v[i]) {
                         const date3 = toDate(v);
-                        const error3 = date.toString();
-                        if (!(date3 instanceof Date) || error3 === 'Invalid Date') {
-                          const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
-                          const err = createError('', y, 'date');
-                          errors.push(err);
-                          if (errors.length >= max) {
-                            return;
+                        if (date3) {
+                          const error3 = date3.toString();
+                          if (!(date3 instanceof Date) || error3 === 'Invalid Date') {
+                            const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
+                            const err = createError('', y, 'date');
+                            errors.push(err);
+                            if (max !== undefined && errors.length >= max) {
+                              return;
+                            }
                           }
                         }
                       }
@@ -449,7 +469,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                         const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                         const err = createError('', y, attr.code);
                         errors.push(err);
-                        if (errors.length >= max) {
+                        if (max !== undefined && errors.length >= max) {
                           return;
                         }
                       }
@@ -464,7 +484,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                 }
               }
             }
-            if (errors.length >= max) {
+            if (max !== undefined && errors.length >= max) {
               return;
             }
             break;
@@ -494,7 +514,7 @@ export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessag
   for (const key of keys) {
     const attr = attrs[key];
     if (attr.required) {
-      const v = obj[key];
+      const v = (obj as any)[key];
       if (!v) {
         errors.push(createError('', key, 'required'));
       }
