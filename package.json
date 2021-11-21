@@ -1,6 +1,6 @@
 {
-  "name": "validator-x",
-  "version": "0.0.10",
+  "name": "xvalidators",
+  "version": "0.0.1",
   "description": "Validate data",
   "main": "./lib/index.js",
   "types": "./src/index.ts",
