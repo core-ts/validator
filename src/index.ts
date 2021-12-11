@@ -1,13 +1,13 @@
 export type DataType = 'ObjectId' | 'date' | 'datetime' | 'time'
-    | 'boolean' | 'number' | 'integer' | 'string' | 'text'
-    | 'object' | 'array' | 'binary'
-    | 'primitives' | 'booleans' | 'numbers' | 'integers' | 'strings' | 'dates' | 'datetimes' | 'times';
+  | 'boolean' | 'number' | 'integer' | 'string' | 'text'
+  | 'object' | 'array' | 'binary'
+  | 'primitives' | 'booleans' | 'numbers' | 'integers' | 'strings' | 'dates' | 'datetimes' | 'times';
 export type FormatType = 'currency' | 'percentage' | 'email' | 'url' | 'phone' | 'fax' | 'ipv4' | 'ipv6';
 
 export interface ErrorMessage {
   field: string;
   code: string;
-  param?: string|number|Date;
+  param?: string | number | Date;
   message?: string;
 }
 
@@ -20,6 +20,7 @@ export interface Attribute {
   type?: DataType;
   format?: FormatType;
   required?: boolean;
+  enum?: string[] | number[];
   length?: number;
   min?: number;
   max?: number;
@@ -27,7 +28,7 @@ export interface Attribute {
   lt?: number;
   precision?: number;
   scale?: number;
-  exp?: RegExp|string;
+  exp?: RegExp | string;
   code?: string;
   typeof?: Attributes;
 }
@@ -48,7 +49,68 @@ export class resources {
   static ipv4 = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
   static ipv6 = /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/;
 }
-
+export function isStrings(s: string[]): boolean {
+  if (!s || s.length === 0) {
+    return true;
+  }
+  for (const x of s) {
+    if (typeof x !== 'string') {
+      return false;
+    }
+  }
+  return true;
+}
+export function isDates(s: Date[]): boolean {
+  if (!s || s.length === 0) {
+    return true;
+  }
+  for (const x of s) {
+    if (!(x instanceof Date)) {
+      return false;
+    }
+  }
+  return true;
+}
+export function isNumbers(s: number[]): boolean {
+  if (!s || s.length === 0) {
+    return true;
+  }
+  for (const x of s) {
+    if (typeof x !== 'number') {
+      return false;
+    }
+  }
+  return true;
+}
+export function isIntegers(s: number[]): boolean {
+  if (!s || s.length === 0) {
+    return true;
+  }
+  for (const x of s) {
+    if (Number.isInteger(x)) {
+      return false;
+    }
+  }
+  return true;
+}
+export function exist<T>(v: T, s: T[]) {
+  for (const x of s) {
+    if (v === x) {
+      return true;
+    }
+  }
+  return false;
+}
+export function toString(s: string[] | number[]): string {
+  if (!s || s.length === 0) {
+    return '';
+  }
+  const x: string[] = [];
+  for (const u of s) {
+    x.push('' + u);
+  }
+  return x.join(',');
+}
 export function isDigitOnly(str: string): boolean {
   if (!str) {
     return false;
@@ -147,7 +209,7 @@ export function isValidPrecision(n: number, precision: number, scale?: number): 
   return (s3.length <= (precision - scale));
 }
 
-function createError(path: string, name: string, code: string, param?: string|number|Date): ErrorMessage {
+function createError(path: string, name: string, code: string, param?: string | number | Date): ErrorMessage {
   let x = name;
   if (path && path.length > 0) {
     x = path + '.' + name;
@@ -192,7 +254,7 @@ function toDate(v: any): Date | null | undefined {
   }
 }
 
-function handleMinMax(v: number|Date, attr: Attribute, path: string, errors: ErrorMessage[]): void {
+function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: ErrorMessage[]): void {
   let na = attr.name;
   if (!na) {
     na = '';
@@ -230,7 +292,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
       attr.name = key;
       const na = attr.name;
       const v = obj[na];
-      if (!v) {
+      if (v == null) {
         if (attr.required && !patch) {
           errors.push(createError(path, na, 'required'));
         }
@@ -307,6 +369,11 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                     errors.push(createError(path, na, code));
                   }
                 }
+                if (attr.enum && attr.enum.length > 0) {
+                  if (!exist(v, attr.enum as string[])) {
+                    errors.push(createError(path, na, 'enum', toString(attr.enum)));
+                  }
+                }
               }
             }
             if (max !== undefined && errors.length >= max) {
@@ -321,16 +388,27 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
               errors.push(createError(path, na, 'number'));
               return;
             } else {
-              if (!attr.precision) {
-                if (!isValidScale(v, attr.scale)) {
-                  errors.push(createError(path, na, 'scale'));
+              if (attr.type === 'integer') {
+                if (!Number.isInteger(v)) {
+                  errors.push(createError(path, na, 'integer'));
                 }
               } else {
-                if (!isValidPrecision(v, attr.precision, attr.scale)) {
-                  errors.push(createError(path, na, 'precision'));
+                if (!attr.precision) {
+                  if (!isValidScale(v, attr.scale)) {
+                    errors.push(createError(path, na, 'scale'));
+                  }
+                } else {
+                  if (!isValidPrecision(v, attr.precision, attr.scale)) {
+                    errors.push(createError(path, na, 'precision'));
+                  }
                 }
               }
               handleMinMax(v, attr, path, errors);
+              if (attr.enum && attr.enum.length > 0) {
+                if (!exist(v, attr.enum as number[])) {
+                  errors.push(createError(path, na, 'enum', toString(attr.enum)));
+                }
+              }
             }
             if (max !== undefined && errors.length >= max) {
               return;
@@ -491,6 +569,45 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
             break;
           }
           default: {
+            if (Array.isArray(v)) {
+              switch (attr.type) {
+                case 'strings': {
+                  if (!isStrings(v)) {
+                    errors.push(createError(path, na, 'strings'));
+                  }
+                  break;
+                }
+                case 'numbers': {
+                  if (!isNumbers(v)) {
+                    errors.push(createError(path, na, 'numbers'));
+                  }
+                  break;
+                }
+                case 'integers': {
+                  if (!isIntegers(v)) {
+                    errors.push(createError(path, na, 'integers'));
+                  }
+                  break;
+                }
+                case 'datetimes': {
+                  if (!isDates(v)) {
+                    errors.push(createError(path, na, 'datetimes'));
+                  }
+                  break;
+                }
+                case 'dates': {
+                  if (resources.ignoreDate) {
+                    if (!isDates(v)) {
+                      errors.push(createError(path, na, 'dates'));
+                    }
+                  }
+                  break;
+                }
+                default: {
+                  break;
+                }
+              }
+            }
             break;
           }
         }
