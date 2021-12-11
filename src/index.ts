@@ -623,6 +623,5 @@ export class Validator<T> {
   }
 }
 export function createValidator<T>(attributes: Attributes, allowUndefined?: boolean, max?: number): Validator<T> {
-  const v = new Validator(attributes, allowUndefined, max);
-  return v;
+  return new Validator(attributes, allowUndefined, max);
 }
