@@ -1,8 +1,11 @@
-export type DataType = 'ObjectId' | 'date' | 'datetime' | 'time'
+export type Type = 'ObjectId' | 'date' | 'datetime' | 'time'
   | 'boolean' | 'number' | 'integer' | 'string' | 'text'
   | 'object' | 'array' | 'binary'
   | 'primitives' | 'booleans' | 'numbers' | 'integers' | 'strings' | 'dates' | 'datetimes' | 'times';
-export type FormatType = 'currency' | 'percentage' | 'email' | 'url' | 'phone' | 'fax' | 'ipv4' | 'ipv6';
+export type Format = 'currency' | 'percentage' | 'email' | 'url' | 'phone' | 'fax' | 'ipv4' | 'ipv6';
+
+export type DataType = Type;
+export type FormatType = Format;
 
 export interface ErrorMessage {
   field: string;
@@ -17,8 +20,8 @@ export interface Model {
 
 export interface Attribute {
   name?: string;
-  type?: DataType;
-  format?: FormatType;
+  type?: Type;
+  format?: Format;
   required?: boolean;
   enum?: string[] | number[];
   length?: number;
@@ -41,7 +44,7 @@ export interface Phones {
 }
 // tslint:disable-next-line:class-name
 export class resources {
-  static phonecodes: Phones;
+  static phonecodes?: Phones;
   static ignoreDate?: boolean;
   static digit = /^\d+$/;
   static email = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,4})$/i;
@@ -281,7 +284,7 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
     }
   }
 }
-function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[], path: string, allowUndefined?: boolean, max?: number, patch?: boolean): void {
+function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[], path: string, allowUndefined?: boolean, patch?: boolean, max?: number): void {
   const keys = Object.keys(obj);
   let count = 0;
   for (const key of keys) {
@@ -452,9 +455,6 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                     if (typeof v !== 'object') {
                       const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                       errors.push(createError('', y, 'object'));
-                      if (max !== undefined && errors.length >= max) {
-                        return;
-                      }
                     } else if (attr.typeof) {
                       const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                       validateObject(v[i], attr.typeof, errors, y);
@@ -482,9 +482,6 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                                   const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                                   const err = createError('', y, 'date');
                                   errors.push(err);
-                                  if (max !== undefined && errors.length >= max) {
-                                    return;
-                                  }
                                 }
                               }
                             }
@@ -495,9 +492,6 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                               const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
                               const err = createError('', y, attr.code);
                               errors.push(err);
-                              if (max !== undefined && errors.length >= max) {
-                                return;
-                              }
                             }
                           }
                         }
@@ -532,9 +526,6 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                         obj[na] = date;
                       }
                       handleMinMax(v, attr, path, errors);
-                    }
-                    if (max !== undefined && errors.length >= max) {
-                      return;
                     }
                   }
                   break;
@@ -610,24 +601,24 @@ export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessag
     }
   }
 }
-export function validate(obj: any, attributes: Attributes, allowUndefined?: boolean, max?: number, patch?: boolean): ErrorMessage[] {
+export function validate(obj: any, attributes: Attributes, allowUndefined?: boolean, patch?: boolean, max?: number): ErrorMessage[] {
   const errors: ErrorMessage[] = [];
   const path = '';
   if (max == null) {
     max = undefined;
   }
-  validateObject(obj, attributes, errors, path, allowUndefined, max, patch);
+  validateObject(obj, attributes, errors, path, allowUndefined, patch, max);
   return errors;
 }
 
 export class Validator<T> {
   max: number;
   constructor(public attributes: Attributes, public allowUndefined?: boolean, max?: number) {
-    this.max = (max ? max : 5);
+    this.max = (max ? max : 10);
     this.validate = this.validate.bind(this);
   }
   validate(obj: T, patch?: boolean): Promise<ErrorMessage[]> {
-    const errors = validate(obj, this.attributes, this.allowUndefined, undefined, patch);
+    const errors = validate(obj, this.attributes, this.allowUndefined, patch, this.max);
     return Promise.resolve(errors);
   }
 }
