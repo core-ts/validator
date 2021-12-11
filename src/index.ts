@@ -52,7 +52,7 @@ export class resources {
   static ipv4 = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
   static ipv6 = /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/;
 }
-export function isStrings(s: string[]): boolean {
+export function isStrings(s?: string[]): boolean {
   if (!s || s.length === 0) {
     return true;
   }
@@ -63,18 +63,21 @@ export function isStrings(s: string[]): boolean {
   }
   return true;
 }
-export function isDates(s: Date[]): boolean {
+export function isDates(s?: Date[] | string[]): boolean {
   if (!s || s.length === 0) {
     return true;
   }
-  for (const x of s) {
-    if (!(x instanceof Date)) {
+  for (let i = 0; i < s.length; i++) {
+    const x = toDate(s[i]);
+    if (x) {
+      s[i] = x;
+    } else {
       return false;
     }
   }
   return true;
 }
-export function isNumbers(s: number[]): boolean {
+export function isNumbers(s?: number[]): boolean {
   if (!s || s.length === 0) {
     return true;
   }
@@ -85,7 +88,7 @@ export function isNumbers(s: number[]): boolean {
   }
   return true;
 }
-export function isIntegers(s: number[]): boolean {
+export function isIntegers(s?: number[]): boolean {
   if (!s || s.length === 0) {
     return true;
   }
@@ -305,216 +308,8 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
       } else {
         const t = typeof v;
         const at = attr.type;
-        switch (t) {
-          case 'string':
-            if (at === undefined || at === 'string' || at === 'text') {
-              if (v.length === 0) {
-                if (attr.required) {
-                  errors.push(createError(path, na, 'required'));
-                }
-              } else {
-                if (attr.min && attr.min > 0 && v.length < attr.min) {
-                  errors.push(createError(path, na, 'minlength', attr.min));
-                }
-                if (attr.length && attr.length > 0 && v.length > attr.length) {
-                  errors.push(createError(path, na, 'maxlength', attr.length));
-                }
-                if (attr.format) {
-                  switch (attr.format) {
-                    case 'email': {
-                      if (!isEmail(v)) {
-                        errors.push(createError(path, na, 'email'));
-                      }
-                      break;
-                    }
-                    case 'url': {
-                      if (!isUrl(v)) {
-                        errors.push(createError(path, na, 'url'));
-                      }
-                      break;
-                    }
-                    case 'phone': {
-                      if (!tel.isPhone(v)) {
-                        errors.push(createError(path, na, 'phone'));
-                      }
-                      break;
-                    }
-                    case 'fax': {
-                      if (!tel.isFax(v)) {
-                        errors.push(createError(path, na, 'fax'));
-                      }
-                      break;
-                    }
-                    case 'ipv4': {
-                      if (!isIPv4(v)) {
-                        errors.push(createError(path, na, 'ipv4'));
-                      }
-                      break;
-                    }
-                    case 'ipv6': {
-                      if (!isIPv6(v)) {
-                        errors.push(createError(path, na, 'ipv6'));
-                      }
-                      break;
-                    }
-                    default: {
-                      break;
-                    }
-                  }
-                }
-                if (attr.exp) {
-                  if (typeof attr.exp === 'string') {
-                    attr.exp = new RegExp(attr.exp);
-                  }
-                  const exp: RegExp = attr.exp;
-                  if (!exp.test(v)) {
-                    const code = (attr.code ? attr.code : 'exp');
-                    errors.push(createError(path, na, code));
-                  }
-                }
-                if (attr.enum && attr.enum.length > 0) {
-                  if (!exist(v, attr.enum as string[])) {
-                    errors.push(createError(path, na, 'enum', toString(attr.enum)));
-                  }
-                }
-              }
-            } else {
-              errors.push(createError(path, na, at));
-              return;
-            }
-            break;
-          case 'number':
-            if (attr.type === 'integer') {
-              if (!Number.isInteger(v)) {
-                errors.push(createError(path, na, 'integer'));
-              }
-            } else if (attr.type === 'number') {
-              if (!attr.precision) {
-                if (!isValidScale(v, attr.scale)) {
-                  errors.push(createError(path, na, 'scale'));
-                }
-              } else {
-                if (!isValidPrecision(v, attr.precision, attr.scale)) {
-                  errors.push(createError(path, na, 'precision'));
-                }
-              }
-            } else {
-              errors.push(createError(path, na, 'number'));
-              return;
-            }
-            handleMinMax(v, attr, path, errors);
-            if (attr.enum && attr.enum.length > 0) {
-              if (!exist(v, attr.enum as number[])) {
-                errors.push(createError(path, na, 'enum', toString(attr.enum)));
-              }
-            }
-            break;
-          case 'boolean':
-            if (at !== 'boolean') {
-              errors.push(createError(path, na, at));
-              return;
-            }
-            break;
-          case 'object':
-            if (Array.isArray(v)) {
-              switch (attr.type) {
-                case 'strings': {
-                  if (!isStrings(v)) {
-                    errors.push(createError(path, na, 'strings'));
-                  }
-                  break;
-                }
-                case 'numbers': {
-                  if (!isNumbers(v)) {
-                    errors.push(createError(path, na, 'numbers'));
-                  }
-                  break;
-                }
-                case 'integers': {
-                  if (!isIntegers(v)) {
-                    errors.push(createError(path, na, 'integers'));
-                  }
-                  break;
-                }
-                case 'datetimes': {
-                  if (!isDates(v)) {
-                    errors.push(createError(path, na, 'datetimes'));
-                  }
-                  break;
-                }
-                case 'dates': {
-                  if (resources.ignoreDate) {
-                    if (!isDates(v)) {
-                      errors.push(createError(path, na, 'dates'));
-                    }
-                  }
-                  break;
-                }
-                case 'array': {
-                  for (let i = 0; i < v.length; i++) {
-                    if (typeof v !== 'object') {
-                      const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
-                      errors.push(createError('', y, 'object'));
-                    } else if (attr.typeof) {
-                      const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
-                      validateObject(v[i], attr.typeof, errors, y);
-                    }
-                  }
-                  break;
-                }
-                case 'primitives': {
-                  if (typeof v !== 'object') {
-                    errors.push(createError(path, na, 'array'));
-                    return;
-                  } else {
-                    if (!Array.isArray(v)) {
-                      errors.push(createError(path, na, 'array'));
-                      return;
-                    } else {
-                      if (attr.code) {
-                        if (attr.code === 'date') {
-                          for (let i = 0; i < v.length; i++) {
-                            if (v[i]) {
-                              const date3 = toDate(v);
-                              if (date3) {
-                                const error3 = date3.toString();
-                                if (!(date3 instanceof Date) || error3 === 'Invalid Date') {
-                                  const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
-                                  const err = createError('', y, 'date');
-                                  errors.push(err);
-                                }
-                              }
-                            }
-                          }
-                        } else {
-                          for (let i = 0; i < v.length; i++) {
-                            if (v[i] && typeof v[i] !== attr.code) {
-                              const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
-                              const err = createError('', y, attr.code);
-                              errors.push(err);
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                  break;
-                }
-                case 'times':
-                  break;
-                default:
-                  errors.push(createError(path, na, at));
-                  return;
-              }
-              if (attr.min && attr.min > 0 && v.length < attr.min) {
-                errors.push(createError(path, na, 'min', attr.min));
-              }
-              if (attr.max && attr.max > 0 && v.length > attr.max) {
-                errors.push(createError(path, na, 'max', attr.max));
-              }
-            } else {
-              switch (attr.type) {
-                case 'datetime':
+        switch (at) {
+          case 'datetime':
                   const date = toDate(v);
                   if (date) {
                     const error = date.toString();
@@ -529,25 +324,233 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                     }
                   }
                   break;
-                case 'date': {
-                  if (resources.ignoreDate) {
-                    const date2 = toDate(v);
-                    if (date2) {
-                      const error2 = date2.toString();
-                      if (!(date2 instanceof Date) || error2 === 'Invalid Date') {
-                        errors.push(createError(path, na, 'date'));
-                        return;
-                      } else {
-                        if (!(v instanceof Date)) {
-                          obj[na] = date;
+          case 'date': {
+            if (resources.ignoreDate) {
+              const date2 = toDate(v);
+              if (date2) {
+                const error2 = date2.toString();
+                if (!(date2 instanceof Date) || error2 === 'Invalid Date') {
+                  errors.push(createError(path, na, 'date'));
+                  return;
+                } else {
+                  if (!(v instanceof Date)) {
+                    obj[na] = date;
+                  }
+                  handleMinMax(v, attr, path, errors);
+                }
+              }
+            }
+            break;
+          }
+          default: {
+            switch (t) {
+              case 'string':
+                if (at === undefined || at === 'string' || at === 'text') {
+                  if (v.length === 0) {
+                    if (attr.required) {
+                      errors.push(createError(path, na, 'required'));
+                    }
+                  } else {
+                    if (attr.min && attr.min > 0 && v.length < attr.min) {
+                      errors.push(createError(path, na, 'minlength', attr.min));
+                    }
+                    if (attr.length && attr.length > 0 && v.length > attr.length) {
+                      errors.push(createError(path, na, 'maxlength', attr.length));
+                    }
+                    if (attr.format) {
+                      switch (attr.format) {
+                        case 'email': {
+                          if (!isEmail(v)) {
+                            errors.push(createError(path, na, 'email'));
+                          }
+                          break;
                         }
-                        handleMinMax(v, attr, path, errors);
+                        case 'url': {
+                          if (!isUrl(v)) {
+                            errors.push(createError(path, na, 'url'));
+                          }
+                          break;
+                        }
+                        case 'phone': {
+                          if (!tel.isPhone(v)) {
+                            errors.push(createError(path, na, 'phone'));
+                          }
+                          break;
+                        }
+                        case 'fax': {
+                          if (!tel.isFax(v)) {
+                            errors.push(createError(path, na, 'fax'));
+                          }
+                          break;
+                        }
+                        case 'ipv4': {
+                          if (!isIPv4(v)) {
+                            errors.push(createError(path, na, 'ipv4'));
+                          }
+                          break;
+                        }
+                        case 'ipv6': {
+                          if (!isIPv6(v)) {
+                            errors.push(createError(path, na, 'ipv6'));
+                          }
+                          break;
+                        }
+                        default: {
+                          break;
+                        }
+                      }
+                    }
+                    if (attr.exp) {
+                      if (typeof attr.exp === 'string') {
+                        attr.exp = new RegExp(attr.exp);
+                      }
+                      const exp: RegExp = attr.exp;
+                      if (!exp.test(v)) {
+                        const code = (attr.code ? attr.code : 'exp');
+                        errors.push(createError(path, na, code));
+                      }
+                    }
+                    if (attr.enum && attr.enum.length > 0) {
+                      if (!exist(v, attr.enum as string[])) {
+                        errors.push(createError(path, na, 'enum', toString(attr.enum)));
                       }
                     }
                   }
-                  break;
+                } else {
+                  errors.push(createError(path, na, at));
+                  return;
                 }
-                case 'object': {
+                break;
+              case 'number':
+                if (attr.type === 'integer') {
+                  if (!Number.isInteger(v)) {
+                    errors.push(createError(path, na, 'integer'));
+                  }
+                } else if (attr.type === 'number') {
+                  if (!attr.precision) {
+                    if (!isValidScale(v, attr.scale)) {
+                      errors.push(createError(path, na, 'scale'));
+                    }
+                  } else {
+                    if (!isValidPrecision(v, attr.precision, attr.scale)) {
+                      errors.push(createError(path, na, 'precision'));
+                    }
+                  }
+                } else {
+                  errors.push(createError(path, na, attr.type));
+                  return;
+                }
+                handleMinMax(v, attr, path, errors);
+                if (attr.enum && attr.enum.length > 0) {
+                  if (!exist(v, attr.enum as number[])) {
+                    errors.push(createError(path, na, 'enum', toString(attr.enum)));
+                  }
+                }
+                break;
+              case 'boolean':
+                if (at !== 'boolean') {
+                  errors.push(createError(path, na, at));
+                  return;
+                }
+                break;
+              case 'object':
+                if (Array.isArray(v)) {
+                  switch (at) {
+                    case 'strings': {
+                      if (!isStrings(v)) {
+                        errors.push(createError(path, na, 'strings'));
+                      }
+                      break;
+                    }
+                    case 'numbers': {
+                      if (!isNumbers(v)) {
+                        errors.push(createError(path, na, 'numbers'));
+                      }
+                      break;
+                    }
+                    case 'integers': {
+                      if (!isIntegers(v)) {
+                        errors.push(createError(path, na, 'integers'));
+                      }
+                      break;
+                    }
+                    case 'datetimes': {
+                      if (!isDates(v)) {
+                        errors.push(createError(path, na, 'datetimes'));
+                      }
+                      break;
+                    }
+                    case 'dates': {
+                      if (resources.ignoreDate) {
+                        if (!isDates(v)) {
+                          errors.push(createError(path, na, 'dates'));
+                        }
+                      }
+                      break;
+                    }
+                    case 'array': {
+                      for (let i = 0; i < v.length; i++) {
+                        if (typeof v !== 'object') {
+                          const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
+                          errors.push(createError('', y, 'object'));
+                        } else if (attr.typeof) {
+                          const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
+                          validateObject(v[i], attr.typeof, errors, y);
+                        }
+                      }
+                      break;
+                    }
+                    case 'primitives': {
+                      if (typeof v !== 'object') {
+                        errors.push(createError(path, na, 'array'));
+                        return;
+                      } else {
+                        if (!Array.isArray(v)) {
+                          errors.push(createError(path, na, 'array'));
+                          return;
+                        } else {
+                          if (attr.code) {
+                            if (attr.code === 'date') {
+                              for (let i = 0; i < v.length; i++) {
+                                if (v[i]) {
+                                  const date3 = toDate(v);
+                                  if (date3) {
+                                    const error3 = date3.toString();
+                                    if (!(date3 instanceof Date) || error3 === 'Invalid Date') {
+                                      const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
+                                      const err = createError('', y, 'date');
+                                      errors.push(err);
+                                    }
+                                  }
+                                }
+                              }
+                            } else {
+                              for (let i = 0; i < v.length; i++) {
+                                if (v[i] && typeof v[i] !== attr.code) {
+                                  const y = (path != null && path.length > 0 ? path + '.' + key + '[' + i + ']' : key + '[' + i + ']');
+                                  const err = createError('', y, attr.code);
+                                  errors.push(err);
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                      break;
+                    }
+                    case 'times':
+                      break;
+                    default:
+                      errors.push(createError(path, na, at));
+                      return;
+                  }
+                  if (attr.min && attr.min > 0 && v.length < attr.min) {
+                    errors.push(createError(path, na, 'min', attr.min));
+                  }
+                  if (attr.max && attr.max > 0 && v.length > attr.max) {
+                    errors.push(createError(path, na, 'max', attr.max));
+                  }
+                } else if (at === 'object') {
                   if (typeof v !== 'object') {
                     errors.push(createError(path, na, 'object'));
                     return;
@@ -559,16 +562,13 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                       validateObject(v, attr.typeof, errors, x);
                     }
                   }
-                  break;
                 }
-                default: {
-                  break;
-                }
-              }
+                break;
+              default:
+                break;
             }
             break;
-          default:
-            break;
+          }
         }
         if (max !== undefined && errors.length >= max) {
           return;
