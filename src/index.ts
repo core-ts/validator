@@ -601,7 +601,7 @@ export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessag
     }
   }
 }
-export function validate(obj: any, attributes: Attributes, allowUndefined?: boolean, patch?: boolean, max?: number): ErrorMessage[] {
+export function check(obj: any, attributes: Attributes, allowUndefined?: boolean, patch?: boolean, max?: number): ErrorMessage[] {
   const errors: ErrorMessage[] = [];
   const path = '';
   if (max == null) {
@@ -610,7 +610,7 @@ export function validate(obj: any, attributes: Attributes, allowUndefined?: bool
   validateObject(obj, attributes, errors, path, allowUndefined, patch, max);
   return errors;
 }
-
+export const validate = check;
 export class Validator<T> {
   max: number;
   constructor(public attributes: Attributes, public allowUndefined?: boolean, max?: number) {
@@ -618,7 +618,7 @@ export class Validator<T> {
     this.validate = this.validate.bind(this);
   }
   validate(obj: T, patch?: boolean): Promise<ErrorMessage[]> {
-    const errors = validate(obj, this.attributes, this.allowUndefined, patch, this.max);
+    const errors = check(obj, this.attributes, this.allowUndefined, patch, this.max);
     return Promise.resolve(errors);
   }
 }
