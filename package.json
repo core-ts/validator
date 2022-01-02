@@ -1,6 +1,6 @@
 {
   "name": "xvalidators",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Validate data",
   "main": "./lib/index.js",
   "types": "./src/index.ts",
@@ -20,6 +20,8 @@
     "url": "git@github.com/core-ts/validator"
   },
   "keywords": [
-    "validator"
+    "validator",
+    "validators",
+    "xvalidators"
   ]
 }

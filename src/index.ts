@@ -51,6 +51,40 @@ export class resources {
   static url = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/;
   static ipv4 = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
   static ipv6 = /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/;
+  static isPhone(str: string): boolean {
+    if (!str || str.length === 0 || str === '+') {
+      return false;
+    }
+    if (str.charAt(0) !== '+') {
+      return isDigitOnly(str);
+    } else {
+      const phoneNumber = str.substring(1);
+      if (!resources.phonecodes) {
+        return isDigitOnly(phoneNumber);
+      } else {
+        if (isDigitOnly(phoneNumber)) {
+          for (let degit = 1; degit <= 3; degit++) {
+            const countryCode = phoneNumber.substr(0, degit);
+            if (countryCode in resources.phonecodes) {
+              return true;
+            }
+          }
+          return false;
+        } else {
+          return false;
+        }
+      }
+    }
+  }
+  static isFax(fax: string): boolean {
+    return resources.isPhone(fax);
+  }
+}
+export function isPhone(str: string): boolean {
+  return resources.isPhone(str);
+}
+export function isFax(str: string): boolean {
+  return resources.isFax(str);
 }
 export function isStrings(s?: string[]): boolean {
   if (!s || s.length === 0) {
@@ -123,39 +157,6 @@ export function isDigitOnly(str: string): boolean {
   }
   return resources.digit.test(str);
 }
-
-// tslint:disable-next-line:class-name
-export class tel {
-  static isPhone(str: string): boolean {
-    if (!str || str.length === 0 || str === '+') {
-      return false;
-    }
-    if (str.charAt(0) !== '+') {
-      return isDigitOnly(str);
-    } else {
-      const phoneNumber = str.substring(1);
-      if (!resources.phonecodes) {
-        return isDigitOnly(phoneNumber);
-      } else {
-        if (isDigitOnly(phoneNumber)) {
-          for (let degit = 1; degit <= 3; degit++) {
-            const countryCode = phoneNumber.substr(0, degit);
-            if (countryCode in resources.phonecodes) {
-              return true;
-            }
-          }
-          return false;
-        } else {
-          return false;
-        }
-      }
-    }
-  }
-  static isFax(fax: string): boolean {
-    return tel.isPhone(fax);
-  }
-}
-
 export function isIPv4(ipv4: string): boolean {
   if (!ipv4 || ipv4.length === 0) {
     return false;
@@ -372,13 +373,13 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                           break;
                         }
                         case 'phone': {
-                          if (!tel.isPhone(v)) {
+                          if (!resources.isPhone(v)) {
                             errors.push(createError(path, na, 'phone'));
                           }
                           break;
                         }
                         case 'fax': {
-                          if (!tel.isFax(v)) {
+                          if (!resources.isFax(v)) {
                             errors.push(createError(path, na, 'fax'));
                           }
                           break;
@@ -611,6 +612,7 @@ export function check(obj: any, attributes: Attributes, allowUndefined?: boolean
   return errors;
 }
 export const validate = check;
+// tslint:disable-next-line:max-classes-per-file
 export class Validator<T> {
   max: number;
   constructor(public attributes: Attributes, public allowUndefined?: boolean, max?: number) {
