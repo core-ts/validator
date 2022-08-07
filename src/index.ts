@@ -127,7 +127,7 @@ export function isIntegers(s?: number[]): boolean {
     return true;
   }
   for (const x of s) {
-    if (Number.isInteger(x)) {
+    if (!Number.isInteger(x)) {
       return false;
     }
   }
