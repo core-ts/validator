@@ -596,7 +596,7 @@ export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessag
     const attr = attrs[key];
     if (attr.required) {
       const v = (obj as any)[key];
-      if (!v) {
+      if (!v && v !== 0 && v !== false) {
         errors.push(createError('', key, 'required'));
       }
     }
