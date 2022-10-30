@@ -424,17 +424,21 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                 break;
               case 'number':
                 if (attr.type === 'integer') {
-                  if (!Number.isInteger(v)) {
+                  if (!Number.isInteger(v) || isNaN(v)) {
                     errors.push(createError(path, na, 'integer'));
                   }
                 } else if (attr.type === 'number') {
-                  if (!attr.precision) {
-                    if (!isValidScale(v, attr.scale)) {
-                      errors.push(createError(path, na, 'scale'));
-                    }
+                  if (isNaN(v)) {
+                    errors.push(createError(path, na, 'number'));
                   } else {
-                    if (!isValidPrecision(v, attr.precision, attr.scale)) {
-                      errors.push(createError(path, na, 'precision'));
+                    if (!attr.precision) {
+                      if (!isValidScale(v, attr.scale)) {
+                        errors.push(createError(path, na, 'scale'));
+                      }
+                    } else {
+                      if (!isValidPrecision(v, attr.precision, attr.scale)) {
+                        errors.push(createError(path, na, 'precision'));
+                      }
                     }
                   }
                 } else {
