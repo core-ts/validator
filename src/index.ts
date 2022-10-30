@@ -155,28 +155,33 @@ export function isDigitOnly(str: string): boolean {
   if (!str) {
     return false;
   }
-  return resources.digit.test(str);
+  const r = new RegExp(resources.digit);
+  return r.test(str);
 }
 export function isIPv4(ipv4: string): boolean {
   if (!ipv4 || ipv4.length === 0) {
     return false;
   }
-  return resources.ipv4.test(ipv4);
+  const r = new RegExp(resources.ipv4);
+  return r.test(ipv4);
 }
 export function isIPv6(ipv6: string): boolean {
   if (!ipv6 || ipv6.length === 0) {
     return false;
   }
-  return resources.ipv6.test(ipv6);
+  const r = new RegExp(resources.ipv6);
+  return r.test(ipv6);
 }
 export function isEmail(email: string): boolean {
   if (!email || email.length === 0) {
     return false;
   }
-  return resources.email.test(email);
+  const r = new RegExp(resources.email);
+  return r.test(email);
 }
 export function isUrl(url: string): boolean {
-  return resources.url.test(url);
+  const r = new RegExp(resources.url);
+  return r.test(url);
 }
 export function isValidScale(n: number, scale?: number): boolean {
   if (isNaN(n) || n === undefined || n == null) {
