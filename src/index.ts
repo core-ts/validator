@@ -351,7 +351,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
           default: {
             switch (t) {
               case 'string':
-                if (at === undefined || at === 'string' || at === 'text') {
+                if (at === undefined || at === 'string' || at === 'text' || at === 'ObjectId') {
                   if (v.length === 0) {
                     if (attr.required) {
                       errors.push(createError(path, na, 'required'));
