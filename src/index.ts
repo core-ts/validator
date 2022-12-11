@@ -34,6 +34,7 @@ export interface Attribute {
   exp?: RegExp | string;
   code?: string;
   typeof?: Attributes;
+  noValidate?: boolean;
 }
 export interface Attributes {
   [key: string]: Attribute;
@@ -305,6 +306,9 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
       }
     } else {
       attr.name = key;
+      if (attr.noValidate) {
+        continue;
+      }
       const na = attr.name;
       const v = obj[na];
       if (v == null) {
