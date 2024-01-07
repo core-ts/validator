@@ -25,10 +25,10 @@ export interface Attribute {
   required?: boolean;
   enum?: string[] | number[];
   length?: number;
-  min?: number;
-  max?: number;
-  gt?: number;
-  lt?: number;
+  min?: number|Date;
+  max?: number|Date;
+  gt?: number|Date;
+  lt?: number|Date;
   precision?: number;
   scale?: number;
   exp?: RegExp | string;
@@ -276,23 +276,26 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
     na = '';
   }
   if (attr.min) {
-    if (v < attr.min) {
+    if (getNumber(v) < getNumber(attr.min)) {
       errors.push(createError(path, na, 'min', attr.min));
     }
   } else if (attr.gt) {
-    if (v <= attr.gt) {
+    if (getNumber(v) <= getNumber(attr.gt)) {
       errors.push(createError(path, na, 'gt', attr.gt));
     }
   }
   if (attr.max) {
-    if (v > attr.max) {
+    if (getNumber(v) > getNumber(attr.max)) {
       errors.push(createError(path, na, 'max', attr.max));
     }
   } else if (attr.lt) {
-    if (v >= attr.lt) {
+    if (getNumber(v) >= getNumber(attr.lt)) {
       errors.push(createError(path, na, 'lt', attr.lt));
     }
   }
+}
+export function getNumber(v: number | Date): number {
+  return (typeof v === 'number' ? v : v.getTime());
 }
 function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[], path: string, allowUndefined?: boolean, patch?: boolean, max?: number): void {
   const keys = Object.keys(obj);
@@ -361,7 +364,7 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                       errors.push(createError(path, na, 'required'));
                     }
                   } else {
-                    if (attr.min && attr.min > 0 && v.length < attr.min) {
+                    if (attr.min && typeof attr.min === 'number' && attr.min > 0 && v.length < attr.min) {
                       errors.push(createError(path, na, 'minlength', attr.min));
                     }
                     if (attr.length && attr.length > 0 && v.length > attr.length) {
@@ -558,10 +561,10 @@ function validateObject(obj: any, attributes: Attributes, errors: ErrorMessage[]
                       errors.push(createError(path, na, at));
                       return;
                   }
-                  if (attr.min && attr.min > 0 && v.length < attr.min) {
+                  if (attr.min && typeof attr.min === 'number' && attr.min > 0 && v.length < attr.min) {
                     errors.push(createError(path, na, 'min', attr.min));
                   }
-                  if (attr.max && attr.max > 0 && v.length > attr.max) {
+                  if (attr.max && typeof attr.max === 'number' && attr.max > 0 && v.length > attr.max) {
                     errors.push(createError(path, na, 'max', attr.max));
                   }
                 } else if (at === 'object') {
