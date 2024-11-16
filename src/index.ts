@@ -262,7 +262,7 @@ export function format(...args: any[]): string {
   }
   return formatted
 }
-function createError(path: string, name: string, code: string | undefined, msg?: string, param?: string | number | Date): ErrorMessage {
+function createError(path: string, name: string, code: string | undefined, msg: string, param?: string | number | Date): ErrorMessage {
   let x = name
   if (path && path.length > 0) {
     x = path + "." + name
@@ -374,7 +374,8 @@ function validateObject(
     const attr: Attribute = attributes[key]
     if (!attr) {
       if (!allowUndefined) {
-        errors.push(createError(path, key, "undefined"))
+        const msg = createMessage(key, "undefined", "error_undefined", resource)
+        errors.push(createError(path, key, "undefined", msg))
       }
     } else {
       attr.name = key
@@ -502,7 +503,8 @@ function validateObject(
                       const exp: RegExp = attr.exp
                       if (!exp.test(v)) {
                         const code = attr.code ? attr.code : "exp"
-                        errors.push(createError(path, na, code))
+                        const msg = createMessage(key, "exp", "error_exp", resource, attr.resource)
+                        errors.push(createError(path, na, "exp", msg))
                       }
                     }
                     if (attr.enum && attr.enum.length > 0) {
@@ -512,7 +514,8 @@ function validateObject(
                     }
                   }
                 } else {
-                  errors.push(createError(path, na, at))
+                  const msg = createMessage(key, "type", "error_type", resource, attr.resource, "string")
+                  errors.push(createError(path, na, "type", msg, "string"))
                   return
                 }
                 break
@@ -540,7 +543,8 @@ function validateObject(
                     }
                   }
                 } else {
-                  errors.push(createError(path, na, attr.type))
+                  const msg = createMessage(key, "type", "error_type", resource, attr.resource, "number")
+                  errors.push(createError(path, na, "type", msg, "number"))
                   return
                 }
                 handleMinMax(v, attr, path, errors, key, resource)
@@ -599,9 +603,10 @@ function validateObject(
                     }
                     case "array": {
                       for (let i = 0; i < v.length; i++) {
-                        if (typeof v !== "object") {
+                        if (typeof v[i] !== "object") {
                           const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
-                          errors.push(createError("", y, "object"))
+                          const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v[i])
+                          errors.push(createError("", y, "type", msg, typeof v[i]))
                         } else if (attr.typeof) {
                           const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
                           validateObject(v[i], attr.typeof, errors, y)
@@ -611,11 +616,13 @@ function validateObject(
                     }
                     case "primitives": {
                       if (typeof v !== "object") {
-                        errors.push(createError(path, na, "array"))
+                        const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
+                        errors.push(createError(path, na, "type", msg, "array"))
                         return
                       } else {
                         if (!Array.isArray(v)) {
-                          errors.push(createError(path, na, "array"))
+                          const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
+                          errors.push(createError(path, na, "type", msg, "array"))
                           return
                         } else {
                           if (attr.code) {
@@ -638,7 +645,8 @@ function validateObject(
                               for (let i = 0; i < v.length; i++) {
                                 if (v[i] && typeof v[i] !== attr.code) {
                                   const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
-                                  const err = createError("", y, attr.code)
+                                  const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v[i])
+                                  const err = createError("", y, "type", msg, typeof v[i])
                                   errors.push(err)
                                 }
                               }
@@ -651,7 +659,8 @@ function validateObject(
                     case "times":
                       break
                     default:
-                      errors.push(createError(path, na, at))
+                      const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
+                      errors.push(createError(path, na, "type", msg, at))
                       return
                   }
                   if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
@@ -664,11 +673,13 @@ function validateObject(
                   }
                 } else if (at === "object") {
                   if (typeof v !== "object") {
-                    errors.push(createError(path, na, "object"))
+                    const msg = createMessage(key, "max", "error_max", resource, attr.resource, typeof v)
+                    errors.push(createError(path, na, "type", msg, "object"))
                     return
                   } else {
                     if (Array.isArray(v)) {
-                      errors.push(createError(path, na, "object"))
+                      const msg = createMessage(key, "max", "error_max", resource, attr.resource, typeof v)
+                      errors.push(createError(path, na, "type", msg, "object"))
                     } else if (attr.typeof) {
                       const x = path != null && path.length > 0 ? path + "." + key : key
                       validateObject(v, attr.typeof, errors, x)
@@ -707,7 +718,7 @@ export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessag
     const attr = attrs[key]
     if (attr.required) {
       const v = (obj as any)[key]
-      if (!v && v !== 0 && v !== false) {
+      if (v === undefined) {
         const msg = createMessage(key, "required", "error_required", resource, attr.resource)
         const err = createError("", key, "required", msg)
         errors.push(err)
