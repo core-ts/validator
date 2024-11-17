@@ -344,7 +344,7 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
 export function getNumber(v: number | Date): number {
   return typeof v === "number" ? v : v.getTime()
 }
-export function createMessage(field: string, code: string, errorKey: string, resource?: StringMap, resourceKey?: string, param?: string): string {
+export function createMessage(field: string, code: string, errorKey: string, resource?: StringMap, resourceKey?: string, param?: string | number): string {
   if (!resource) {
     return ""
   }
@@ -532,12 +532,12 @@ function validateObject(
                   } else {
                     if (!attr.precision) {
                       if (!isValidScale(v, attr.scale)) {
-                        const msg = createMessage(key, "scale", "error_scale", resource, attr.resource)
+                        const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.precision)
                         errors.push(createError(path, na, "scale", msg))
                       }
                     } else {
                       if (!isValidPrecision(v, attr.precision, attr.scale)) {
-                        const msg = createMessage(key, "precision", "error_precision", resource, attr.resource)
+                        const msg = createMessage(key, "precision", "error_precision", resource, attr.resource, attr.scale)
                         errors.push(createError(path, na, "precision", msg))
                       }
                     }
