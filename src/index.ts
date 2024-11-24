@@ -532,12 +532,12 @@ function validateObject(
                   } else {
                     if (!attr.precision) {
                       if (!isValidScale(v, attr.scale)) {
-                        const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.precision)
+                        const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.scale)
                         errors.push(createError(path, na, "scale", msg))
                       }
                     } else {
                       if (!isValidPrecision(v, attr.precision, attr.scale)) {
-                        const msg = createMessage(key, "precision", "error_precision", resource, attr.resource, attr.scale)
+                        const msg = createMessage(key, "precision", "error_precision", resource, attr.resource, attr.precision)
                         errors.push(createError(path, na, "precision", msg))
                       }
                     }
@@ -726,7 +726,7 @@ export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessag
     }
   }
 }
-export function check<T>(obj: T, attributes: Attributes, allowUndefined?: boolean, patch?: boolean, resource?: StringMap, max?: number): ErrorMessage[] {
+export function check<T>(obj: T, attributes: Attributes, resource?: StringMap, patch?: boolean, allowUndefined?: boolean, max?: number): ErrorMessage[] {
   const errors: ErrorMessage[] = []
   const path = ""
   if (max == null) {
@@ -735,8 +735,8 @@ export function check<T>(obj: T, attributes: Attributes, allowUndefined?: boolea
   validateObject(obj, attributes, errors, path, allowUndefined, patch, max, resource)
   return errors
 }
-export function validate<T>(obj: T, attributes: Attributes, allowUndefined?: boolean, patch?: boolean, resource?: StringMap, max?: number): ErrorMessage[] {
-  return check(obj, attributes, allowUndefined, patch, resource, max)
+export function validate<T>(obj: T, attributes: Attributes, resource?: StringMap, patch?: boolean, allowUndefined?: boolean, max?: number): ErrorMessage[] {
+  return check(obj, attributes, resource, patch, allowUndefined, max)
 }
 // tslint:disable-next-line:max-classes-per-file
 export class Validator<T> {
@@ -745,8 +745,8 @@ export class Validator<T> {
     this.max = max ? max : 10
     this.validate = this.validate.bind(this)
   }
-  validate(obj: T, patch?: boolean, resource?: StringMap): Promise<ErrorMessage[]> {
-    const errors = check(obj, this.attributes, this.allowUndefined, patch, resource, this.max)
+  validate(obj: T, resource?: StringMap, patch?: boolean): Promise<ErrorMessage[]> {
+    const errors = check(obj, this.attributes, resource, patch, this.allowUndefined, this.max)
     return Promise.resolve(errors)
   }
 }
