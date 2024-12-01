@@ -729,13 +729,13 @@ export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessag
 export function check<T>(obj: T, attributes: Attributes, resource?: StringMap, patch?: boolean, allowUndefined?: boolean, max?: number): ErrorMessage[] {
   const errors: ErrorMessage[] = []
   const path = ""
-  if (max == null) {
+  if (max === null) {
     max = undefined
   }
   validateObject(obj, attributes, errors, path, allowUndefined, patch, max, resource)
   return errors
 }
-export function validate<T>(obj: T, attributes: Attributes, resource?: StringMap, patch?: boolean, allowUndefined?: boolean, max?: number): ErrorMessage[] {
+export function validate<T>(obj: T, attributes: Attributes, resource?: StringMap, allowUndefined?: boolean, patch?: boolean, max?: number): ErrorMessage[] {
   return check(obj, attributes, resource, patch, allowUndefined, max)
 }
 // tslint:disable-next-line:max-classes-per-file
