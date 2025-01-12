@@ -64,6 +64,9 @@ export interface Attributes {
 export interface Phones {
   [key: string]: string
 }
+export function isEmpty(str: string | null | undefined): boolean {
+  return !str || str === ""
+}
 // tslint:disable-next-line:class-name
 export class resources {
   static phonecodes?: Phones
