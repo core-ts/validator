@@ -323,23 +323,23 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
   }
   if (attr.min) {
     if (getNumber(v) < getNumber(attr.min)) {
-      const msg = createMessage(key, "min", "error_min", resource, attr.resource)
+      const msg = createMessage(key, "min", "error_min", resource, attr.resource, attr.min)
       errors.push(createError(path, na, "min", msg, attr.min))
     }
   } else if (attr.gt) {
     if (getNumber(v) <= getNumber(attr.gt)) {
-      const msg = createMessage(key, "gt", "error_gt", resource, attr.resource)
+      const msg = createMessage(key, "gt", "error_gt", resource, attr.resource, attr.gt)
       errors.push(createError(path, na, "gt", msg, attr.gt))
     }
   }
   if (attr.max) {
     if (getNumber(v) > getNumber(attr.max)) {
-      const msg = createMessage(key, "max", "error_max", resource, attr.resource)
+      const msg = createMessage(key, "max", "error_max", resource, attr.resource, attr.max)
       errors.push(createError(path, na, "max", msg, attr.max))
     }
   } else if (attr.lt) {
     if (getNumber(v) >= getNumber(attr.lt)) {
-      const msg = createMessage(key, "lt", "error_lt", resource, attr.resource)
+      const msg = createMessage(key, "lt", "error_lt", resource, attr.resource, attr.lt)
       errors.push(createError(path, na, "lt", msg, attr.lt))
     }
   }
@@ -347,7 +347,7 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
 export function getNumber(v: number | Date): number {
   return typeof v === "number" ? v : v.getTime()
 }
-export function createMessage(field: string, code: string, errorKey: string, resource?: StringMap, resourceKey?: string, param?: string | number): string {
+export function createMessage(field: string, code: string, errorKey: string, resource?: StringMap, resourceKey?: string, param?: string | number | Date): string {
   if (!resource) {
     return ""
   }
@@ -365,10 +365,10 @@ function validateObject(
   attributes: Attributes,
   errors: ErrorMessage[],
   path: string,
+  resource?: StringMap,
   allowUndefined?: boolean,
   patch?: boolean,
   max?: number,
-  resource?: StringMap,
 ): void {
   const keys = Object.keys(obj)
   let count = 0
@@ -443,11 +443,11 @@ function validateObject(
                     }
                   } else {
                     if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
-                      const msg = createMessage(key, "minlength", "error_minlength", resource, attr.resource)
+                      const msg = createMessage(key, "minlength", "error_minlength", resource, attr.resource, attr.min)
                       errors.push(createError(path, na, "minlength", msg, attr.min))
                     }
                     if (attr.length && attr.length > 0 && v.length > attr.length) {
-                      const msg = createMessage(key, "maxlength", "error_maxlength", resource, attr.resource)
+                      const msg = createMessage(key, "maxlength", "error_maxlength", resource, attr.resource, attr.length)
                       errors.push(createError(path, na, "maxlength", msg, attr.length))
                     }
                     if (attr.format) {
@@ -507,12 +507,13 @@ function validateObject(
                       if (!exp.test(v)) {
                         const code = attr.code ? attr.code : "exp"
                         const msg = createMessage(key, "exp", "error_exp", resource, attr.resource)
-                        errors.push(createError(path, na, "exp", msg))
+                        errors.push(createError(path, na, code, msg))
                       }
                     }
                     if (attr.enum && attr.enum.length > 0) {
                       if (!exist(v, attr.enum as string[])) {
-                        errors.push(createError(path, na, "enum", toString(attr.enum)))
+                        const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                        errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
                       }
                     }
                   }
@@ -612,7 +613,7 @@ function validateObject(
                           errors.push(createError("", y, "type", msg, typeof v[i]))
                         } else if (attr.typeof) {
                           const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
-                          validateObject(v[i], attr.typeof, errors, y)
+                          validateObject(v[i], attr.typeof, errors, y, resource)
                         }
                       }
                       break
@@ -685,7 +686,7 @@ function validateObject(
                       errors.push(createError(path, na, "type", msg, "object"))
                     } else if (attr.typeof) {
                       const x = path != null && path.length > 0 ? path + "." + key : key
-                      validateObject(v, attr.typeof, errors, x)
+                      validateObject(v, attr.typeof, errors, x, resource)
                     }
                   }
                 }
@@ -735,7 +736,7 @@ export function check<T>(obj: T, attributes: Attributes, resource?: StringMap, p
   if (max === null) {
     max = undefined
   }
-  validateObject(obj, attributes, errors, path, allowUndefined, patch, max, resource)
+  validateObject(obj, attributes, errors, path, resource, allowUndefined, patch, max)
   return errors
 }
 export function validate<T>(obj: T, attributes: Attributes, resource?: StringMap, allowUndefined?: boolean, patch?: boolean, max?: number): ErrorMessage[] {
