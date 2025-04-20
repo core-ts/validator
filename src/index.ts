@@ -572,6 +572,13 @@ function validateObject(
                       if (!isStrings(v)) {
                         const msg = createMessage(key, "strings", "error_strings", resource, attr.resource)
                         errors.push(createError(path, na, "strings", msg))
+                      } else if (attr.enum && attr.enum.length > 0) { 
+                        for (const x of v) {
+                          if (!exist(x, attr.enum as string[])) {
+                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                          }
+                        }
                       }
                       break
                     }
@@ -579,6 +586,13 @@ function validateObject(
                       if (!isNumbers(v)) {
                         const msg = createMessage(key, "numbers", "error_numbers", resource, attr.resource)
                         errors.push(createError(path, na, "numbers", msg))
+                      } else if (attr.enum && attr.enum.length > 0){
+                        for (const x of v) {
+                          if (!exist(x, attr.enum as number[])) {
+                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                          }
+                        }
                       }
                       break
                     }
@@ -586,6 +600,13 @@ function validateObject(
                       if (!isIntegers(v)) {
                         const msg = createMessage(key, "integers", "error_integers", resource, attr.resource)
                         errors.push(createError(path, na, "integers", msg))
+                      } else if (attr.enum && attr.enum.length > 0){
+                        for (const x of v) {
+                          if (!exist(x, attr.enum as number[])) {
+                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                          }
+                        }
                       }
                       break
                     }
