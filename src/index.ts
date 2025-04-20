@@ -175,7 +175,7 @@ export function toString(s: string[] | number[]): string {
   for (const u of s) {
     x.push("" + u)
   }
-  return x.join(",")
+  return x.join(", ")
 }
 export function isDigitOnly(str: string): boolean {
   if (!str) {
@@ -347,7 +347,14 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
 export function getNumber(v: number | Date): number {
   return typeof v === "number" ? v : v.getTime()
 }
-export function createMessage(field: string, code: string, errorKey: string, resource?: StringMap, resourceKey?: string, param?: string | number | Date): string {
+export function createMessage(
+  field: string,
+  code: string,
+  errorKey: string,
+  resource?: StringMap,
+  resourceKey?: string,
+  param?: string | number | Date,
+): string {
   if (!resource) {
     return ""
   }
@@ -506,7 +513,7 @@ function validateObject(
                       const exp: RegExp = attr.exp
                       if (!exp.test(v)) {
                         const code = attr.code ? attr.code : "exp"
-                        const msg = createMessage(key, "exp", "error_exp", resource, attr.resource)
+                        const msg = attr.resource ? attr.resource : createMessage(key, "exp", "error_exp", resource)
                         errors.push(createError(path, na, code, msg))
                       }
                     }
@@ -554,7 +561,8 @@ function validateObject(
                 handleMinMax(v, attr, path, errors, key, resource)
                 if (attr.enum && attr.enum.length > 0) {
                   if (!exist(v, attr.enum as number[])) {
-                    errors.push(createError(path, na, "enum", toString(attr.enum)))
+                    const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                    errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
                   }
                 }
                 break
@@ -572,7 +580,7 @@ function validateObject(
                       if (!isStrings(v)) {
                         const msg = createMessage(key, "strings", "error_strings", resource, attr.resource)
                         errors.push(createError(path, na, "strings", msg))
-                      } else if (attr.enum && attr.enum.length > 0) { 
+                      } else if (attr.enum && attr.enum.length > 0) {
                         for (const x of v) {
                           if (!exist(x, attr.enum as string[])) {
                             const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
@@ -586,7 +594,7 @@ function validateObject(
                       if (!isNumbers(v)) {
                         const msg = createMessage(key, "numbers", "error_numbers", resource, attr.resource)
                         errors.push(createError(path, na, "numbers", msg))
-                      } else if (attr.enum && attr.enum.length > 0){
+                      } else if (attr.enum && attr.enum.length > 0) {
                         for (const x of v) {
                           if (!exist(x, attr.enum as number[])) {
                             const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
@@ -600,7 +608,7 @@ function validateObject(
                       if (!isIntegers(v)) {
                         const msg = createMessage(key, "integers", "error_integers", resource, attr.resource)
                         errors.push(createError(path, na, "integers", msg))
-                      } else if (attr.enum && attr.enum.length > 0){
+                      } else if (attr.enum && attr.enum.length > 0) {
                         for (const x of v) {
                           if (!exist(x, attr.enum as number[])) {
                             const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
@@ -778,3 +786,4 @@ export class Validator<T> {
 export function createValidator<T>(attributes: Attributes, allowUndefined?: boolean, max?: number): Validator<T> {
   return new Validator(attributes, allowUndefined, max)
 }
+
