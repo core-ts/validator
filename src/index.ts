@@ -315,7 +315,16 @@ function toDate(v: any): Date | null | undefined {
     }
   }
 }
-
+function handleArrayMinMax(v: number, attr: Attribute, path: string, errors: ErrorMessage[], key: string, resource?: StringMap): void {
+  if (attr.min && typeof attr.min === "number" && attr.min > 0 && v < attr.min) {
+    const msg = createMessage(key, "min", "error_array_min", resource, attr.resource, attr.min)
+    errors.push(createError(path, key, "min", msg, attr.min))
+  }
+  if (attr.max && typeof attr.max === "number" && attr.max > 0 && v > attr.max) {
+    const msg = createMessage(key, "max", "error_array_max", resource, attr.resource, attr.max)
+    errors.push(createError(path, key, "max", msg, attr.max))
+  }
+}
 function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: ErrorMessage[], key: string, resource?: StringMap): void {
   let na = attr.name
   if (!na) {
@@ -394,7 +403,7 @@ function validateObject(
       }
       const na = attr.name
       const v = obj[na]
-      if (v == null) {
+      if (v === undefined || v == null) {
         if (attr.required && !patch) {
           const msg = createMessage(key, "required", "error_required", resource, attr.resource)
           errors.push(createError(path, na, "required", msg))
@@ -580,11 +589,14 @@ function validateObject(
                       if (!isStrings(v)) {
                         const msg = createMessage(key, "strings", "error_strings", resource, attr.resource)
                         errors.push(createError(path, na, "strings", msg))
-                      } else if (attr.enum && attr.enum.length > 0) {
-                        for (const x of v) {
-                          if (!exist(x, attr.enum as string[])) {
-                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                      } else {
+                        handleArrayMinMax(v.length, attr, path, errors, key, resource)
+                        if (attr.enum && attr.enum.length > 0) {
+                          for (const x of v) {
+                            if (!exist(x, attr.enum as string[])) {
+                              const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                              errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                            }
                           }
                         }
                       }
@@ -594,11 +606,14 @@ function validateObject(
                       if (!isNumbers(v)) {
                         const msg = createMessage(key, "numbers", "error_numbers", resource, attr.resource)
                         errors.push(createError(path, na, "numbers", msg))
-                      } else if (attr.enum && attr.enum.length > 0) {
-                        for (const x of v) {
-                          if (!exist(x, attr.enum as number[])) {
-                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                      } else {
+                        handleArrayMinMax(v.length, attr, path, errors, key, resource)
+                        if (attr.enum && attr.enum.length > 0) {
+                          for (const x of v) {
+                            if (!exist(x, attr.enum as number[])) {
+                              const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                              errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                            }
                           }
                         }
                       }
@@ -608,11 +623,14 @@ function validateObject(
                       if (!isIntegers(v)) {
                         const msg = createMessage(key, "integers", "error_integers", resource, attr.resource)
                         errors.push(createError(path, na, "integers", msg))
-                      } else if (attr.enum && attr.enum.length > 0) {
-                        for (const x of v) {
-                          if (!exist(x, attr.enum as number[])) {
-                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                      } else {
+                        handleArrayMinMax(v.length, attr, path, errors, key, resource)
+                        if (attr.enum && attr.enum.length > 0) {
+                          for (const x of v) {
+                            if (!exist(x, attr.enum as number[])) {
+                              const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                              errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                            }
                           }
                         }
                       }
@@ -635,6 +653,7 @@ function validateObject(
                       break
                     }
                     case "array": {
+                      handleArrayMinMax(v.length, attr, path, errors, key, resource)
                       for (let i = 0; i < v.length; i++) {
                         if (typeof v[i] !== "object") {
                           const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
@@ -696,6 +715,7 @@ function validateObject(
                       errors.push(createError(path, na, "type", msg, at))
                       return
                   }
+                  /*
                   if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
                     const msg = createMessage(key, "min", "error_min", resource, attr.resource)
                     errors.push(createError(path, na, "min", msg, attr.min))
@@ -704,6 +724,7 @@ function validateObject(
                     const msg = createMessage(key, "max", "error_max", resource, attr.resource)
                     errors.push(createError(path, na, "max", msg, attr.max))
                   }
+                    */
                 } else if (at === "object") {
                   if (typeof v !== "object") {
                     const msg = createMessage(key, "max", "error_max", resource, attr.resource, typeof v)
@@ -786,4 +807,3 @@ export class Validator<T> {
 export function createValidator<T>(attributes: Attributes, allowUndefined?: boolean, max?: number): Validator<T> {
   return new Validator(attributes, allowUndefined, max)
 }
-

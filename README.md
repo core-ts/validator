@@ -39,7 +39,7 @@
 
 ## Simple Sample
 ```typescript
-import { Attributes, StringMap, validate } from "./validator"
+import { Attributes, StringMap, validate } from "xvalidators"
 
 interface Resources {
   [key: string]: StringMap
@@ -377,4 +377,84 @@ const invalidUser: User = {
 errors = validate(invalidUser, userSchema, resource, true)
 console.log("Validate Peter Parker: ", errors)
 
+```
+
+Out put is:
+```text
+Validate James Howlett:  [
+  {
+    field: 'email',
+    code: 'email',
+    message: 'Email is not a valid email address.'
+  },
+  {
+    field: 'phone',
+    code: 'required',
+    message: 'Telephone is required.'
+  },
+  {
+    field: 'age',
+    code: 'undefined',
+    message: 'age is not allowed to exist.'
+  }
+]
+Validate Tony Stark (no error):  []
+Validate Peter Parker:  [
+  {
+    field: 'id',
+    code: 'maxlength',
+    message: 'id cannot be greater than 40 characters.',
+    param: 40
+  },
+  {
+    field: 'email',
+    code: 'email',
+    message: 'Email is not a valid email address.'
+  },
+  {
+    field: 'phone',
+    code: 'phone',
+    message: 'Telephone is not a valid phone number.'
+  },
+  {
+    field: 'website',
+    code: 'url',
+    message: 'Website is not a valid URL.'
+  },
+  {
+    field: 'creditLimit',
+    code: 'precision',
+    message: 'creditLimit has a valid precision. Precision must be less than or equal to 10'
+  },
+  {
+    field: 'status',
+    code: 'enum',
+    message: 'User Status must be one of active, inactive, online, offline, away.',
+    param: 'active, inactive, online, offline, away'
+  },
+  {
+    field: 'address.state',
+    code: 'maxlength',
+    message: 'state cannot be greater than 2 characters.',
+    param: 2
+  },
+  {
+    field: 'address.state',
+    code: 'exp',
+    message: 'state does not match the regular expression.'
+  },
+  { field: 'address.zip', code: 'exp', message: 'zip_code' },
+  {
+    field: 'achievements[0].quality',
+    code: 'enum',
+    message: 'Quality must be one of Excellent, Good, Average, Poor, Very Poor.',
+    param: 'Excellent, Good, Average, Poor, Very Poor'
+  },
+  {
+    field: 'achievements[0].skills[1].level',
+    code: 'enum',
+    message: 'Level must be one of 1, 2, 3, 4, 5.',
+    param: '1, 2, 3, 4, 5'
+  }
+]
 ```
