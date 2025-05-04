@@ -522,7 +522,7 @@ function validateObject(
                       const exp: RegExp = attr.exp
                       if (!exp.test(v)) {
                         const code = attr.code ? attr.code : "exp"
-                        const msg = attr.resource ? attr.resource : createMessage(key, "exp", "error_exp", resource)
+                        const msg = resource && attr.resource ? resource[attr.resource] : createMessage(key, "exp", "error_exp", resource)
                         errors.push(createError(path, na, code, msg))
                       }
                     }
