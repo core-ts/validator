@@ -511,16 +511,16 @@ const userSchema: Attributes = {
 }
 
 let errors = validate(
-        {
-          username: "james.howlett",
-          email: "james.howlett@gmail", // invalid email
-          phone: "", // required => invalid
-          website: "https://james.howlett.com",
-          dateOfBirth: "1974-03-25", // valid date => the library will convert to date
-          age: 50, // does not exist in schema => invalid
-        },
-        userSchema,
-        resource,
+  {
+    username: "james.howlett",
+    email: "james.howlett@gmail", // invalid email
+    phone: "", // required => invalid
+    website: "https://james.howlett.com",
+    dateOfBirth: "1974-03-25", // valid date => the library will convert to date
+    age: 50, // does not exist in schema => invalid
+  },
+  userSchema,
+  resource,
 )
 console.log("Validate James Howlett: ", errors)
 

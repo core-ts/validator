@@ -64,7 +64,7 @@ export interface Attributes {
 export interface Phones {
   [key: string]: string
 }
-export function isEmpty(str: string | null | undefined): boolean {
+export function isEmpty(str?: string | null): boolean {
   return !str || str === ""
 }
 // tslint:disable-next-line:class-name
@@ -74,9 +74,11 @@ export class resources {
   static digit = /^\d+$/
   static email = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,4})$/i
   static url = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/
-  static ipv4 = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/
-  static ipv6 =
-    /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+  static ipv4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/
+  static ipv6 = /^(([0-9a-fA-F]{1,4}):){7}([0-9a-fA-F]{1,4})$/
+  static isEmpty(str?: string | null): boolean {
+    return !str || str === ""
+  }
   static isPhone(str: string): boolean {
     if (!str || str.length === 0 || str === "+") {
       return false
@@ -213,7 +215,7 @@ export function isValidScale(n: number, scale?: number): boolean {
   if (isNaN(n) || n === undefined || n == null) {
     return true
   }
-  if (scale === undefined || scale == null || scale < 0) {
+  if (scale === undefined || scale < 0) {
     return true
   }
   const s = n.toString()
@@ -228,10 +230,10 @@ export function isValidPrecision(n: number, precision: number, scale?: number): 
   if (isNaN(n) || n === undefined || n == null) {
     return true
   }
-  if (precision === undefined || precision == null || precision < 0) {
+  if (precision === undefined || precision < 0) {
     return isValidScale(n, scale)
   }
-  if (scale === undefined || scale == null || scale < 0) {
+  if (scale === undefined || scale < 0) {
     scale = 0
   }
   const s = n.toString()
@@ -330,23 +332,23 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
   if (!na) {
     na = ""
   }
-  if (attr.min) {
+  if (attr.min !== undefined) {
     if (getNumber(v) < getNumber(attr.min)) {
       const msg = createMessage(key, "min", "error_min", resource, attr.resource, attr.min)
       errors.push(createError(path, na, "min", msg, attr.min))
     }
-  } else if (attr.gt) {
+  } else if (attr.gt !== undefined) {
     if (getNumber(v) <= getNumber(attr.gt)) {
       const msg = createMessage(key, "gt", "error_gt", resource, attr.resource, attr.gt)
       errors.push(createError(path, na, "gt", msg, attr.gt))
     }
   }
-  if (attr.max) {
+  if (attr.max !== undefined) {
     if (getNumber(v) > getNumber(attr.max)) {
       const msg = createMessage(key, "max", "error_max", resource, attr.resource, attr.max)
       errors.push(createError(path, na, "max", msg, attr.max))
     }
-  } else if (attr.lt) {
+  } else if (attr.lt !== undefined) {
     if (getNumber(v) >= getNumber(attr.lt)) {
       const msg = createMessage(key, "lt", "error_lt", resource, attr.resource, attr.lt)
       errors.push(createError(path, na, "lt", msg, attr.lt))
@@ -452,9 +454,11 @@ function validateObject(
               if (at === undefined || at === "string" || at === "text" || at === "ObjectId") {
                 if (v.length === 0) {
                   if (attr.required) {
-                    const msg = createMessage(key, "required", "error_required", resource, attr.resource)
-                    const err = createError(path, na, "required", msg)
-                    errors.push(err)
+                    if (resources.isEmpty(v)) {
+                      const msg = createMessage(key, "required", "error_required", resource, attr.resource)
+                      const err = createError(path, na, "required", msg)
+                      errors.push(err)
+                    }
                   }
                 } else {
                   if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
@@ -549,12 +553,10 @@ function validateObject(
                   const msg = createMessage(key, "number", "error_number", resource, attr.resource)
                   errors.push(createError(path, na, "number", msg))
                 } else {
-                  if (!attr.precision) {
-                    if (!isValidScale(v, attr.scale)) {
-                      const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.scale)
-                      errors.push(createError(path, na, "scale", msg))
-                    }
-                  } else {
+                  if (!isValidScale(v, attr.scale)) {
+                    const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.scale)
+                    errors.push(createError(path, na, "scale", msg))
+                  } else if (attr.precision) {
                     if (!isValidPrecision(v, attr.precision, attr.scale)) {
                       const msg = createMessage(key, "precision", "error_precision", resource, attr.resource, attr.precision)
                       errors.push(createError(path, na, "precision", msg))
