@@ -77,7 +77,7 @@ export class resources {
   static ipv4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/
   static ipv6 = /^(([0-9a-fA-F]{1,4}):){7}([0-9a-fA-F]{1,4})$/
   static isEmpty(str?: string | null): boolean {
-    return !str || str === ""
+    return str === ""
   }
   static isPhone(str: string): boolean {
     if (!str || str.length === 0 || str === "+") {
@@ -451,16 +451,17 @@ function validateObject(
         default: {
           switch (t) {
             case "string":
-              if (at === undefined || at === "string" || at === "text" || at === "ObjectId") {
-                if (v.length === 0) {
-                  if (attr.required) {
-                    if (resources.isEmpty(v)) {
-                      const msg = createMessage(key, "required", "error_required", resource, attr.resource)
-                      const err = createError(path, na, "required", msg)
-                      errors.push(err)
-                    }
+              if (at === undefined || at === "text" || at === "ObjectId" || at === "string") {
+                let ne = true
+                if (v.length === 0 && attr.required) {
+                  if (resources.isEmpty(v)) {
+                    const msg = createMessage(key, "required", "error_required", resource, attr.resource)
+                    const err = createError(path, na, "required", msg)
+                    errors.push(err)
+                    ne = false
                   }
-                } else {
+                } 
+                if (ne) {
                   if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
                     const msg = createMessage(key, "minlength", "error_minlength", resource, attr.resource, attr.min)
                     errors.push(createError(path, na, "minlength", msg, attr.min))
