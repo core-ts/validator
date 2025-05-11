@@ -397,8 +397,13 @@ function validateObject(
     }
     const na = attr.name
     const v = obj[na]
-    if (v === undefined || v == null) {
+    if (v === undefined) {
       if (attr.required && !patch) {
+        const msg = createMessage(key, "required", "error_required", resource, attr.resource)
+        errors.push(createError(path, na, "required", msg))
+      }
+    } else if (v == null) {
+      if (attr.required) {
         const msg = createMessage(key, "required", "error_required", resource, attr.resource)
         errors.push(createError(path, na, "required", msg))
       }
