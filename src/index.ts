@@ -757,11 +757,13 @@ function validateObject(
     return
   }
   const aks = Object.keys(attributes)
+  /*
   if (!allowUndefined) {
     if (count >= aks.length) {
       return
     }
   }
+  */
   checkUndefined(obj, attributes, errors, resource, aks)
 }
 export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessage[], resource?: StringMap, keys?: string[]): void {
