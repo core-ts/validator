@@ -386,37 +386,48 @@ function validateObject(
   patch?: boolean,
   max?: number,
 ): void {
-  const keys = Object.keys(obj)
+  const keys = Object.keys(attributes)
   let count = 0
   for (const key of keys) {
     count = count + 1
     const attr: Attribute = attributes[key]
-    if (!attr) {
-      if (!allowUndefined) {
-        const msg = createMessage(key, "undefined", "error_undefined", resource)
-        errors.push(createError(path, key, "undefined", msg))
+    attr.name = key
+    if (attr.noValidate) {
+      continue
+    }
+    const na = attr.name
+    const v = obj[na]
+    if (v === undefined || v == null) {
+      if (attr.required && !patch) {
+        const msg = createMessage(key, "required", "error_required", resource, attr.resource)
+        errors.push(createError(path, na, "required", msg))
       }
     } else {
-      attr.name = key
-      if (attr.noValidate) {
-        continue
-      }
-      const na = attr.name
-      const v = obj[na]
-      if (v === undefined || v == null) {
-        if (attr.required && !patch) {
-          const msg = createMessage(key, "required", "error_required", resource, attr.resource)
-          errors.push(createError(path, na, "required", msg))
-        }
-      } else {
-        const t = typeof v
-        const at = attr.type
-        switch (at) {
-          case "datetime":
-            const date = toDate(v)
-            if (date) {
-              const error = date.toString()
-              if (!(date instanceof Date) || error === "Invalid Date") {
+      const t = typeof v
+      const at = attr.type
+      switch (at) {
+        case "datetime":
+          const date = toDate(v)
+          if (date) {
+            const error = date.toString()
+            if (!(date instanceof Date) || error === "Invalid Date") {
+              const msg = createMessage(key, "date", "error_date", resource, attr.resource)
+              errors.push(createError(path, na, "date", msg))
+              return
+            } else {
+              if (!(v instanceof Date)) {
+                obj[na] = date
+              }
+              handleMinMax(v, attr, path, errors, key, resource)
+            }
+          }
+          break
+        case "date": {
+          if (resources.ignoreDate) {
+            const date2 = toDate(v)
+            if (date2) {
+              const error2 = date2.toString()
+              if (!(date2 instanceof Date) || error2 === "Invalid Date") {
                 const msg = createMessage(key, "date", "error_date", resource, attr.resource)
                 errors.push(createError(path, na, "date", msg))
                 return
@@ -427,358 +438,325 @@ function validateObject(
                 handleMinMax(v, attr, path, errors, key, resource)
               }
             }
-            break
-          case "date": {
-            if (resources.ignoreDate) {
-              const date2 = toDate(v)
-              if (date2) {
-                const error2 = date2.toString()
-                if (!(date2 instanceof Date) || error2 === "Invalid Date") {
-                  const msg = createMessage(key, "date", "error_date", resource, attr.resource)
-                  errors.push(createError(path, na, "date", msg))
-                  return
-                } else {
-                  if (!(v instanceof Date)) {
-                    obj[na] = date
+          }
+          break
+        }
+        default: {
+          switch (t) {
+            case "string":
+              if (at === undefined || at === "string" || at === "text" || at === "ObjectId") {
+                if (v.length === 0) {
+                  if (attr.required) {
+                    const msg = createMessage(key, "required", "error_required", resource, attr.resource)
+                    const err = createError(path, na, "required", msg)
+                    errors.push(err)
                   }
-                  handleMinMax(v, attr, path, errors, key, resource)
+                } else {
+                  if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
+                    const msg = createMessage(key, "minlength", "error_minlength", resource, attr.resource, attr.min)
+                    errors.push(createError(path, na, "minlength", msg, attr.min))
+                  }
+                  if (attr.length && attr.length > 0 && v.length > attr.length) {
+                    const msg = createMessage(key, "maxlength", "error_maxlength", resource, attr.resource, attr.length)
+                    errors.push(createError(path, na, "maxlength", msg, attr.length))
+                  }
+                  if (attr.format) {
+                    switch (attr.format) {
+                      case "email": {
+                        if (!isEmail(v)) {
+                          const msg = createMessage(key, "email", "error_email", resource, attr.resource)
+                          errors.push(createError(path, na, "email", msg))
+                        }
+                        break
+                      }
+                      case "url": {
+                        if (!isUrl(v)) {
+                          const msg = createMessage(key, "url", "error_url", resource, attr.resource)
+                          errors.push(createError(path, na, "url", msg))
+                        }
+                        break
+                      }
+                      case "phone": {
+                        if (!resources.isPhone(v)) {
+                          const msg = createMessage(key, "phone", "error_phone", resource, attr.resource)
+                          errors.push(createError(path, na, "phone", msg))
+                        }
+                        break
+                      }
+                      case "fax": {
+                        if (!resources.isFax(v)) {
+                          const msg = createMessage(key, "fax", "error_fax", resource, attr.resource)
+                          errors.push(createError(path, na, "fax", msg))
+                        }
+                        break
+                      }
+                      case "ipv4": {
+                        if (!isIPv4(v)) {
+                          const msg = createMessage(key, "ipv4", "error_ipv4", resource, attr.resource)
+                          errors.push(createError(path, na, "ipv4", msg))
+                        }
+                        break
+                      }
+                      case "ipv6": {
+                        if (!isIPv6(v)) {
+                          const msg = createMessage(key, "ipv6", "error_ipv6", resource, attr.resource)
+                          errors.push(createError(path, na, "ipv6", msg))
+                        }
+                        break
+                      }
+                      default: {
+                        break
+                      }
+                    }
+                  }
+                  if (attr.exp) {
+                    if (typeof attr.exp === "string") {
+                      attr.exp = new RegExp(attr.exp)
+                    }
+                    const exp: RegExp = attr.exp
+                    if (!exp.test(v)) {
+                      const code = attr.code ? attr.code : "exp"
+                      const msg = resource && attr.resource ? resource[attr.resource] : createMessage(key, "exp", "error_exp", resource)
+                      errors.push(createError(path, na, code, msg))
+                    }
+                  }
+                  if (attr.enum && attr.enum.length > 0) {
+                    if (!exist(v, attr.enum as string[])) {
+                      const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                      errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                    }
+                  }
+                }
+              } else {
+                const msg = createMessage(key, "type", "error_type", resource, attr.resource, "string")
+                errors.push(createError(path, na, "type", msg, "string"))
+                return
+              }
+              break
+            case "number":
+              if (attr.type === "integer") {
+                if (!Number.isInteger(v) || isNaN(v)) {
+                  const msg = createMessage(key, "integer", "error_integer", resource, attr.resource)
+                  errors.push(createError(path, na, "integer", msg))
+                }
+              } else if (attr.type === "number") {
+                if (isNaN(v)) {
+                  const msg = createMessage(key, "number", "error_number", resource, attr.resource)
+                  errors.push(createError(path, na, "number", msg))
+                } else {
+                  if (!attr.precision) {
+                    if (!isValidScale(v, attr.scale)) {
+                      const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.scale)
+                      errors.push(createError(path, na, "scale", msg))
+                    }
+                  } else {
+                    if (!isValidPrecision(v, attr.precision, attr.scale)) {
+                      const msg = createMessage(key, "precision", "error_precision", resource, attr.resource, attr.precision)
+                      errors.push(createError(path, na, "precision", msg))
+                    }
+                  }
+                }
+              } else {
+                const msg = createMessage(key, "type", "error_type", resource, attr.resource, "number")
+                errors.push(createError(path, na, "type", msg, "number"))
+                return
+              }
+              handleMinMax(v, attr, path, errors, key, resource)
+              if (attr.enum && attr.enum.length > 0) {
+                if (!exist(v, attr.enum as number[])) {
+                  const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                  errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
                 }
               }
-            }
-            break
-          }
-          default: {
-            switch (t) {
-              case "string":
-                if (at === undefined || at === "string" || at === "text" || at === "ObjectId") {
-                  if (v.length === 0) {
-                    if (attr.required) {
-                      const msg = createMessage(key, "required", "error_required", resource, attr.resource)
-                      const err = createError(path, na, "required", msg)
-                      errors.push(err)
-                    }
-                  } else {
-                    if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
-                      const msg = createMessage(key, "minlength", "error_minlength", resource, attr.resource, attr.min)
-                      errors.push(createError(path, na, "minlength", msg, attr.min))
-                    }
-                    if (attr.length && attr.length > 0 && v.length > attr.length) {
-                      const msg = createMessage(key, "maxlength", "error_maxlength", resource, attr.resource, attr.length)
-                      errors.push(createError(path, na, "maxlength", msg, attr.length))
-                    }
-                    if (attr.format) {
-                      switch (attr.format) {
-                        case "email": {
-                          if (!isEmail(v)) {
-                            const msg = createMessage(key, "email", "error_email", resource, attr.resource)
-                            errors.push(createError(path, na, "email", msg))
-                          }
-                          break
-                        }
-                        case "url": {
-                          if (!isUrl(v)) {
-                            const msg = createMessage(key, "url", "error_url", resource, attr.resource)
-                            errors.push(createError(path, na, "url", msg))
-                          }
-                          break
-                        }
-                        case "phone": {
-                          if (!resources.isPhone(v)) {
-                            const msg = createMessage(key, "phone", "error_phone", resource, attr.resource)
-                            errors.push(createError(path, na, "phone", msg))
-                          }
-                          break
-                        }
-                        case "fax": {
-                          if (!resources.isFax(v)) {
-                            const msg = createMessage(key, "fax", "error_fax", resource, attr.resource)
-                            errors.push(createError(path, na, "fax", msg))
-                          }
-                          break
-                        }
-                        case "ipv4": {
-                          if (!isIPv4(v)) {
-                            const msg = createMessage(key, "ipv4", "error_ipv4", resource, attr.resource)
-                            errors.push(createError(path, na, "ipv4", msg))
-                          }
-                          break
-                        }
-                        case "ipv6": {
-                          if (!isIPv6(v)) {
-                            const msg = createMessage(key, "ipv6", "error_ipv6", resource, attr.resource)
-                            errors.push(createError(path, na, "ipv6", msg))
-                          }
-                          break
-                        }
-                        default: {
-                          break
-                        }
-                      }
-                    }
-                    if (attr.exp) {
-                      if (typeof attr.exp === "string") {
-                        attr.exp = new RegExp(attr.exp)
-                      }
-                      const exp: RegExp = attr.exp
-                      if (!exp.test(v)) {
-                        const code = attr.code ? attr.code : "exp"
-                        const msg = resource && attr.resource ? resource[attr.resource] : createMessage(key, "exp", "error_exp", resource)
-                        errors.push(createError(path, na, code, msg))
-                      }
-                    }
-                    if (attr.enum && attr.enum.length > 0) {
-                      if (!exist(v, attr.enum as string[])) {
-                        const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                        errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
-                      }
-                    }
-                  }
-                } else {
-                  const msg = createMessage(key, "type", "error_type", resource, attr.resource, "string")
-                  errors.push(createError(path, na, "type", msg, "string"))
-                  return
-                }
-                break
-              case "number":
-                if (attr.type === "integer") {
-                  if (!Number.isInteger(v) || isNaN(v)) {
-                    const msg = createMessage(key, "integer", "error_integer", resource, attr.resource)
-                    errors.push(createError(path, na, "integer", msg))
-                  }
-                } else if (attr.type === "number") {
-                  if (isNaN(v)) {
-                    const msg = createMessage(key, "number", "error_number", resource, attr.resource)
-                    errors.push(createError(path, na, "number", msg))
-                  } else {
-                    if (!attr.precision) {
-                      if (!isValidScale(v, attr.scale)) {
-                        const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.scale)
-                        errors.push(createError(path, na, "scale", msg))
-                      }
+              break
+            case "boolean":
+              if (at !== "boolean") {
+                const msg = createMessage(key, "boolean", "error_boolean", resource, attr.resource)
+                errors.push(createError(path, na, at, msg))
+                return
+              }
+              break
+            case "object":
+              if (Array.isArray(v)) {
+                switch (at) {
+                  case "strings": {
+                    if (!isStrings(v)) {
+                      const msg = createMessage(key, "strings", "error_strings", resource, attr.resource)
+                      errors.push(createError(path, na, "strings", msg))
                     } else {
-                      if (!isValidPrecision(v, attr.precision, attr.scale)) {
-                        const msg = createMessage(key, "precision", "error_precision", resource, attr.resource, attr.precision)
-                        errors.push(createError(path, na, "precision", msg))
-                      }
-                    }
-                  }
-                } else {
-                  const msg = createMessage(key, "type", "error_type", resource, attr.resource, "number")
-                  errors.push(createError(path, na, "type", msg, "number"))
-                  return
-                }
-                handleMinMax(v, attr, path, errors, key, resource)
-                if (attr.enum && attr.enum.length > 0) {
-                  if (!exist(v, attr.enum as number[])) {
-                    const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                    errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
-                  }
-                }
-                break
-              case "boolean":
-                if (at !== "boolean") {
-                  const msg = createMessage(key, "boolean", "error_boolean", resource, attr.resource)
-                  errors.push(createError(path, na, at, msg))
-                  return
-                }
-                break
-              case "object":
-                if (Array.isArray(v)) {
-                  switch (at) {
-                    case "strings": {
-                      if (!isStrings(v)) {
-                        const msg = createMessage(key, "strings", "error_strings", resource, attr.resource)
-                        errors.push(createError(path, na, "strings", msg))
-                      } else {
-                        handleArrayMinMax(v.length, attr, path, errors, key, resource)
-                        if (attr.enum && attr.enum.length > 0) {
-                          for (const x of v) {
-                            if (!exist(x, attr.enum as string[])) {
-                              const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                              errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
-                            }
-                          }
-                        }
-                      }
-                      break
-                    }
-                    case "numbers": {
-                      if (!isNumbers(v)) {
-                        const msg = createMessage(key, "numbers", "error_numbers", resource, attr.resource)
-                        errors.push(createError(path, na, "numbers", msg))
-                      } else {
-                        handleArrayMinMax(v.length, attr, path, errors, key, resource)
-                        if (attr.enum && attr.enum.length > 0) {
-                          for (const x of v) {
-                            if (!exist(x, attr.enum as number[])) {
-                              const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                              errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
-                            }
-                          }
-                        }
-                      }
-                      break
-                    }
-                    case "integers": {
-                      if (!isIntegers(v)) {
-                        const msg = createMessage(key, "integers", "error_integers", resource, attr.resource)
-                        errors.push(createError(path, na, "integers", msg))
-                      } else {
-                        handleArrayMinMax(v.length, attr, path, errors, key, resource)
-                        if (attr.enum && attr.enum.length > 0) {
-                          for (const x of v) {
-                            if (!exist(x, attr.enum as number[])) {
-                              const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
-                              errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
-                            }
-                          }
-                        }
-                      }
-                      break
-                    }
-                    case "datetimes": {
-                      if (!isDates(v)) {
-                        const msg = createMessage(key, "datetimes", "error_datetimes", resource, attr.resource)
-                        errors.push(createError(path, na, "datetimes", msg))
-                      }
-                      break
-                    }
-                    case "dates": {
-                      if (resources.ignoreDate) {
-                        if (!isDates(v)) {
-                          const msg = createMessage(key, "dates", "error_dates", resource, attr.resource)
-                          errors.push(createError(path, na, "dates", msg))
-                        }
-                      }
-                      break
-                    }
-                    case "array": {
                       handleArrayMinMax(v.length, attr, path, errors, key, resource)
-                      for (let i = 0; i < v.length; i++) {
-                        if (typeof v[i] !== "object") {
-                          const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
-                          const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v[i])
-                          errors.push(createError("", y, "type", msg, typeof v[i]))
-                        } else if (attr.typeof) {
-                          const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
-                          validateObject(v[i], attr.typeof, errors, y, resource)
+                      if (attr.enum && attr.enum.length > 0) {
+                        for (const x of v) {
+                          if (!exist(x, attr.enum as string[])) {
+                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                          }
                         }
                       }
-                      break
                     }
-                    case "primitives": {
-                      if (typeof v !== "object") {
+                    break
+                  }
+                  case "numbers": {
+                    if (!isNumbers(v)) {
+                      const msg = createMessage(key, "numbers", "error_numbers", resource, attr.resource)
+                      errors.push(createError(path, na, "numbers", msg))
+                    } else {
+                      handleArrayMinMax(v.length, attr, path, errors, key, resource)
+                      if (attr.enum && attr.enum.length > 0) {
+                        for (const x of v) {
+                          if (!exist(x, attr.enum as number[])) {
+                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                          }
+                        }
+                      }
+                    }
+                    break
+                  }
+                  case "integers": {
+                    if (!isIntegers(v)) {
+                      const msg = createMessage(key, "integers", "error_integers", resource, attr.resource)
+                      errors.push(createError(path, na, "integers", msg))
+                    } else {
+                      handleArrayMinMax(v.length, attr, path, errors, key, resource)
+                      if (attr.enum && attr.enum.length > 0) {
+                        for (const x of v) {
+                          if (!exist(x, attr.enum as number[])) {
+                            const msg = createMessage(key, "enum", "error_enum", resource, attr.resource, toString(attr.enum))
+                            errors.push(createError(path, na, "enum", msg, toString(attr.enum)))
+                          }
+                        }
+                      }
+                    }
+                    break
+                  }
+                  case "datetimes": {
+                    if (!isDates(v)) {
+                      const msg = createMessage(key, "datetimes", "error_datetimes", resource, attr.resource)
+                      errors.push(createError(path, na, "datetimes", msg))
+                    }
+                    break
+                  }
+                  case "dates": {
+                    if (resources.ignoreDate) {
+                      if (!isDates(v)) {
+                        const msg = createMessage(key, "dates", "error_dates", resource, attr.resource)
+                        errors.push(createError(path, na, "dates", msg))
+                      }
+                    }
+                    break
+                  }
+                  case "array": {
+                    handleArrayMinMax(v.length, attr, path, errors, key, resource)
+                    for (let i = 0; i < v.length; i++) {
+                      if (typeof v[i] !== "object") {
+                        const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
+                        const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v[i])
+                        errors.push(createError("", y, "type", msg, typeof v[i]))
+                      } else if (attr.typeof) {
+                        const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
+                        validateObject(v[i], attr.typeof, errors, y, resource)
+                      }
+                    }
+                    break
+                  }
+                  case "primitives": {
+                    if (typeof v !== "object") {
+                      const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
+                      errors.push(createError(path, na, "type", msg, "array"))
+                      return
+                    } else {
+                      if (!Array.isArray(v)) {
                         const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
                         errors.push(createError(path, na, "type", msg, "array"))
                         return
                       } else {
-                        if (!Array.isArray(v)) {
-                          const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
-                          errors.push(createError(path, na, "type", msg, "array"))
-                          return
-                        } else {
-                          if (attr.code) {
-                            if (attr.code === "date") {
-                              for (let i = 0; i < v.length; i++) {
-                                if (v[i]) {
-                                  const date3 = toDate(v)
-                                  if (date3) {
-                                    const error3 = date3.toString()
-                                    if (!(date3 instanceof Date) || error3 === "Invalid Date") {
-                                      const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
-                                      const msg = createMessage(key, "date", "error_date", resource, attr.resource)
-                                      const err = createError("", y, "date", msg)
-                                      errors.push(err)
-                                    }
+                        if (attr.code) {
+                          if (attr.code === "date") {
+                            for (let i = 0; i < v.length; i++) {
+                              if (v[i]) {
+                                const date3 = toDate(v)
+                                if (date3) {
+                                  const error3 = date3.toString()
+                                  if (!(date3 instanceof Date) || error3 === "Invalid Date") {
+                                    const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
+                                    const msg = createMessage(key, "date", "error_date", resource, attr.resource)
+                                    const err = createError("", y, "date", msg)
+                                    errors.push(err)
                                   }
                                 }
                               }
-                            } else {
-                              for (let i = 0; i < v.length; i++) {
-                                if (v[i] && typeof v[i] !== attr.code) {
-                                  const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
-                                  const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v[i])
-                                  const err = createError("", y, "type", msg, typeof v[i])
-                                  errors.push(err)
-                                }
+                            }
+                          } else {
+                            for (let i = 0; i < v.length; i++) {
+                              if (v[i] && typeof v[i] !== attr.code) {
+                                const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
+                                const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v[i])
+                                const err = createError("", y, "type", msg, typeof v[i])
+                                errors.push(err)
                               }
                             }
                           }
                         }
                       }
-                      break
                     }
-                    case "times":
-                      break
-                    default:
-                      const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
-                      errors.push(createError(path, na, "type", msg, at))
-                      return
+                    break
                   }
-                  /*
-                  if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
-                    const msg = createMessage(key, "min", "error_min", resource, attr.resource)
-                    errors.push(createError(path, na, "min", msg, attr.min))
-                  }
-                  if (attr.max && typeof attr.max === "number" && attr.max > 0 && v.length > attr.max) {
-                    const msg = createMessage(key, "max", "error_max", resource, attr.resource)
-                    errors.push(createError(path, na, "max", msg, attr.max))
-                  }
-                    */
-                } else if (at === "object") {
-                  if (typeof v !== "object") {
+                  case "times":
+                    break
+                  default:
+                    const msg = createMessage(key, "type", "error_type", resource, attr.resource, typeof v)
+                    errors.push(createError(path, na, "type", msg, at))
+                    return
+                }
+                /*
+                if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
+                  const msg = createMessage(key, "min", "error_min", resource, attr.resource)
+                  errors.push(createError(path, na, "min", msg, attr.min))
+                }
+                if (attr.max && typeof attr.max === "number" && attr.max > 0 && v.length > attr.max) {
+                  const msg = createMessage(key, "max", "error_max", resource, attr.resource)
+                  errors.push(createError(path, na, "max", msg, attr.max))
+                }
+                  */
+              } else if (at === "object") {
+                if (typeof v !== "object") {
+                  const msg = createMessage(key, "max", "error_max", resource, attr.resource, typeof v)
+                  errors.push(createError(path, na, "type", msg, "object"))
+                  return
+                } else {
+                  if (Array.isArray(v)) {
                     const msg = createMessage(key, "max", "error_max", resource, attr.resource, typeof v)
                     errors.push(createError(path, na, "type", msg, "object"))
-                    return
-                  } else {
-                    if (Array.isArray(v)) {
-                      const msg = createMessage(key, "max", "error_max", resource, attr.resource, typeof v)
-                      errors.push(createError(path, na, "type", msg, "object"))
-                    } else if (attr.typeof) {
-                      const x = path != null && path.length > 0 ? path + "." + key : key
-                      validateObject(v, attr.typeof, errors, x, resource)
-                    }
+                  } else if (attr.typeof) {
+                    const x = path != null && path.length > 0 ? path + "." + key : key
+                    validateObject(v, attr.typeof, errors, x, resource)
                   }
                 }
-                break
-              default:
-                break
-            }
-            break
+              }
+              break
+            default:
+              break
           }
+          break
         }
-        if (max !== undefined && errors.length >= max) {
-          return
-        }
+      }
+      if (max !== undefined && errors.length >= max) {
+        return
       }
     }
   }
-  if (patch) {
-    return
-  }
-  const aks = Object.keys(attributes)
-  /*
   if (!allowUndefined) {
-    if (count >= aks.length) {
-      return
-    }
+    checkUndefined(obj, attributes, errors, path, resource)
   }
-  */
-  checkUndefined(obj, attributes, errors, resource, aks)
 }
-export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessage[], resource?: StringMap, keys?: string[]): void {
-  if (!keys) {
-    keys = Object.keys(attrs)
-  }
+export function checkUndefined<T>(obj: T, attrs: Attributes, errors: ErrorMessage[], path: string, resource?: StringMap): void {
+  const keys = Object.keys(obj as any)
   for (const key of keys) {
     const attr = attrs[key]
-    if (attr.required) {
-      const v = (obj as any)[key]
-      if (v === undefined) {
-        const msg = createMessage(key, "required", "error_required", resource, attr.resource)
-        const err = createError("", key, "required", msg)
-        errors.push(err)
-      }
+    if (!attr) {
+      const msg = createMessage(key, "undefined", "error_undefined", resource)
+      errors.push(createError(path, key, "undefined", msg))
     }
   }
 }
