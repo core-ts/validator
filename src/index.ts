@@ -293,31 +293,14 @@ function isValidDate(date: Date): boolean {
 }
 const _datereg = "/Date("
 const _re = /-?\d+/
-function toDate(v: any): Date | null | undefined {
+function toDate(v: number | string | Date): Date | null | undefined {
   if (!v) {
     return null
   }
   if (v instanceof Date) {
     return v
-  } else if (typeof v === "number") {
-    return new Date(v)
-  }
-  const i = v.indexOf(_datereg)
-  if (i >= 0) {
-    const m = _re.exec(v)
-    if (m !== null) {
-      const d = parseInt(m[0], 10)
-      return new Date(d)
-    } else {
-      return null
-    }
   } else {
-    if (isNaN(v)) {
-      return new Date(v)
-    } else {
-      const d = parseInt(v, 10)
-      return new Date(d)
-    }
+    return new Date(v)
   }
 }
 function handleArrayMinMax(v: number, attr: Attribute, path: string, errors: ErrorMessage[], key: string, resource?: StringMap): void {
@@ -680,13 +663,15 @@ function validateObject(
                           if (attr.code === "date") {
                             for (let i = 0; i < v.length; i++) {
                               if (v[i]) {
-                                const date3 = toDate(v)
+                                const date3 = toDate(v[i])
                                 if (date3) {
                                   if (!isValidDate(date3)) {
                                     const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
                                     const msg = createMessage(key, "date", "error_date", resource, attr.resource)
                                     const err = createError("", y, "date", msg)
                                     errors.push(err)
+                                  } else {
+                                    v[i] = date3
                                   }
                                 }
                               }
