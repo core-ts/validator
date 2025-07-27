@@ -288,6 +288,9 @@ function createError(path: string, name: string, code: string | undefined, msg: 
   return error
 }
 
+function isValidDate(date: Date): boolean {
+  return date instanceof Date && !isNaN(date.getTime());
+}
 const _datereg = "/Date("
 const _re = /-?\d+/
 function toDate(v: any): Date | null | undefined {
@@ -416,16 +419,13 @@ function validateObject(
         case "datetime":
           const date = toDate(v)
           if (date) {
-            const error = date.toString()
-            if (!(date instanceof Date) || error === "Invalid Date") {
+            if (isValidDate(date)) {
+              obj[na] = date
+              handleMinMax(date, attr, path, errors, key, resource)
+            } else {
               const msg = createMessage(key, "date", "error_date", resource, attr.resource)
               errors.push(createError(path, na, "date", msg))
               return
-            } else {
-              if (!(v instanceof Date)) {
-                obj[na] = date
-              }
-              handleMinMax(v, attr, path, errors, key, resource)
             }
           }
           break
@@ -433,16 +433,13 @@ function validateObject(
           if (resources.ignoreDate) {
             const date2 = toDate(v)
             if (date2) {
-              const error2 = date2.toString()
-              if (!(date2 instanceof Date) || error2 === "Invalid Date") {
+              if (isValidDate(date2)) {
+                obj[na] = date2
+                handleMinMax(date2, attr, path, errors, key, resource)
+              } else {
                 const msg = createMessage(key, "date", "error_date", resource, attr.resource)
                 errors.push(createError(path, na, "date", msg))
                 return
-              } else {
-                if (!(v instanceof Date)) {
-                  obj[na] = date
-                }
-                handleMinMax(v, attr, path, errors, key, resource)
               }
             }
           }
@@ -685,8 +682,7 @@ function validateObject(
                               if (v[i]) {
                                 const date3 = toDate(v)
                                 if (date3) {
-                                  const error3 = date3.toString()
-                                  if (!(date3 instanceof Date) || error3 === "Invalid Date") {
+                                  if (!isValidDate(date3)) {
                                     const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
                                     const msg = createMessage(key, "date", "error_date", resource, attr.resource)
                                     const err = createError("", y, "date", msg)
