@@ -45,10 +45,10 @@ export interface Attribute {
   required?: boolean
   enum?: string[] | number[]
   length?: number
-  min?: number | Date
-  max?: number | Date
-  gt?: number | Date
-  lt?: number | Date
+  min?: number | Date | string
+  max?: number | Date | string
+  gt?: number | Date | string
+  lt?: number | Date | string
   precision?: number
   scale?: number
   exp?: RegExp | string
@@ -289,10 +289,8 @@ function createError(path: string, name: string, code: string | undefined, msg: 
 }
 
 function isValidDate(date: Date): boolean {
-  return date instanceof Date && !isNaN(date.getTime());
+  return date instanceof Date && !isNaN(date.getTime())
 }
-const _datereg = "/Date("
-const _re = /-?\d+/
 function toDate(v: number | string | Date): Date | null | undefined {
   if (!v) {
     return null
@@ -318,32 +316,87 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
   if (!na) {
     na = ""
   }
-  if (attr.min !== undefined) {
-    if (getNumber(v) < getNumber(attr.min)) {
-      const msg = createMessage(key, "min", "error_min", resource, attr.resource, attr.min)
-      errors.push(createError(path, na, "min", msg, attr.min))
+  if (typeof v === "number") {
+    if (attr.min !== undefined) {
+      if (v < (attr.min as number)) {
+        const msg = createMessage(key, "min", "error_min", resource, attr.resource, attr.min)
+        errors.push(createError(path, na, "min", msg, attr.min))
+      }
+    } else if (attr.gt !== undefined) {
+      if (v <= (attr.gt as number)) {
+        const msg = createMessage(key, "gt", "error_gt", resource, attr.resource, attr.gt)
+        errors.push(createError(path, na, "gt", msg, attr.gt))
+      }
     }
-  } else if (attr.gt !== undefined) {
-    if (getNumber(v) <= getNumber(attr.gt)) {
-      const msg = createMessage(key, "gt", "error_gt", resource, attr.resource, attr.gt)
-      errors.push(createError(path, na, "gt", msg, attr.gt))
+    if (attr.max !== undefined) {
+      if (v > (attr.max as number)) {
+        const msg = createMessage(key, "max", "error_max", resource, attr.resource, attr.max)
+        errors.push(createError(path, na, "max", msg, attr.max))
+      }
+    } else if (attr.lt !== undefined) {
+      if (v >= (attr.lt as number)) {
+        const msg = createMessage(key, "lt", "error_lt", resource, attr.resource, attr.lt)
+        errors.push(createError(path, na, "lt", msg, attr.lt))
+      }
     }
-  }
-  if (attr.max !== undefined) {
-    if (getNumber(v) > getNumber(attr.max)) {
-      const msg = createMessage(key, "max", "error_max", resource, attr.resource, attr.max)
-      errors.push(createError(path, na, "max", msg, attr.max))
+  } else if (v instanceof Date) {
+    if (attr.min !== undefined) {
+      if (attr.min instanceof Date) {
+        if (v.getTime() < attr.min.getTime()) {
+          const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
+          errors.push(createError(path, na, "min", msg, attr.min))
+        } else {
+          if (v.getTime() <= toDateNumber(attr.min)) {
+            const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
+            errors.push(createError(path, na, "min", msg, attr.min))
+          }
+        }
+      }
+    } else if (attr.gt !== undefined) {
+      if (attr.gt instanceof Date) {
+        if (v.getTime() <= attr.gt.getTime()) {
+          const msg = createMessage(key, "gt", "error_after", resource, attr.resource, attr.gt)
+          errors.push(createError(path, na, "gt", msg, attr.gt))
+        }
+      } else {
+        if (v.getTime() <= toDateNumber(attr.gt)) {
+          const msg = createMessage(key, "gt", "error_after", resource, attr.resource, attr.gt)
+          errors.push(createError(path, na, "gt", msg, attr.gt))
+        }
+      }
     }
-  } else if (attr.lt !== undefined) {
-    if (getNumber(v) >= getNumber(attr.lt)) {
-      const msg = createMessage(key, "lt", "error_lt", resource, attr.resource, attr.lt)
-      errors.push(createError(path, na, "lt", msg, attr.lt))
+    if (attr.max !== undefined) {
+      if (attr.max instanceof Date) {
+        if (v.getTime() > attr.max.getTime()) {
+          const msg = createMessage(key, "max", "error_max_date", resource, attr.resource, attr.max)
+          errors.push(createError(path, na, "max", msg, attr.max))
+        }
+      } else {
+        if (v.getTime() > toDateNumber(attr.max)) {
+          const msg = createMessage(key, "max", "error_max_date", resource, attr.resource, attr.max)
+          errors.push(createError(path, na, "max", msg, attr.max))
+        }
+      }
+    } else if (attr.lt !== undefined) {
+      if (attr.lt instanceof Date) {
+        if (v.getTime() >= attr.lt.getTime()) {
+          const msg = createMessage(key, "lt", "error_before", resource, attr.resource, attr.lt)
+          errors.push(createError(path, na, "lt", msg, attr.lt))
+        }
+      } else {
+        if (v.getTime() >= toDateNumber(attr.lt)) {
+          const msg = createMessage(key, "lt", "error_before", resource, attr.resource, attr.lt)
+          errors.push(createError(path, na, "lt", msg, attr.lt))
+        }
+      }
     }
   }
 }
-export function getNumber(v: number | Date): number {
-  return typeof v === "number" ? v : v.getTime()
+function toDateNumber(s: string | number | Date): number {
+  const d = new Date(s)
+  return d.getTime()
 }
+
 export function createMessage(
   field: string,
   code: string,
@@ -440,7 +493,7 @@ function validateObject(
                     errors.push(err)
                     ne = false
                   }
-                } 
+                }
                 if (ne) {
                   if (attr.min && typeof attr.min === "number" && attr.min > 0 && v.length < attr.min) {
                     const msg = createMessage(key, "minlength", "error_minlength", resource, attr.resource, attr.min)
