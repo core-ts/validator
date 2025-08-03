@@ -345,11 +345,11 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
         if (v.getTime() < attr.min.getTime()) {
           const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
           errors.push(createError(path, na, "min", msg, attr.min))
-        } else {
-          if (v.getTime() <= toDateNumber(attr.min)) {
-            const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
-            errors.push(createError(path, na, "min", msg, attr.min))
-          }
+        }
+      } else {
+        if (v.getTime() <= toDateNumber(attr.min)) {
+          const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
+          errors.push(createError(path, na, "min", msg, attr.min))
         }
       }
     } else if (attr.gt !== undefined) {
