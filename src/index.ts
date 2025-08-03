@@ -288,7 +288,7 @@ function createError(path: string, name: string, code: string | undefined, msg: 
   return error
 }
 
-function isValidDate(date: Date): boolean {
+export function isValidDate(date: Date): boolean {
   return date instanceof Date && !isNaN(date.getTime())
 }
 function toDate(v: number | string | Date): Date | null | undefined {
@@ -300,6 +300,17 @@ function toDate(v: number | string | Date): Date | null | undefined {
   } else {
     return new Date(v)
   }
+}
+export function trimTime(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+export function getToday(): Date {
+  return trimTime(new Date())
+}
+export function addDays(date: Date, number: number): Date {
+  const d = new Date(date)
+  d.setDate(d.getDate() + number)
+  return d
 }
 function handleArrayMinMax(v: number, attr: Attribute, path: string, errors: ErrorMessage[], key: string, resource?: StringMap): void {
   if (attr.min && typeof attr.min === "number" && attr.min > 0 && v < attr.min) {
@@ -340,61 +351,130 @@ function handleMinMax(v: number | Date, attr: Attribute, path: string, errors: E
       }
     }
   } else if (v instanceof Date) {
-    if (attr.min !== undefined) {
+    const t = v.getTime()
+    if (attr.min) {
       if (attr.min instanceof Date) {
-        if (v.getTime() < attr.min.getTime()) {
+        if (t < attr.min.getTime()) {
           const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
           errors.push(createError(path, na, "min", msg, attr.min))
         }
       } else {
-        if (v.getTime() <= toDateNumber(attr.min)) {
-          const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
-          errors.push(createError(path, na, "min", msg, attr.min))
+        switch (attr.min) {
+          case "now":
+            const now = new Date()
+            if (t < now.getTime()) {
+              const msg = createMessage(key, "min", "error_from_now", resource, attr.resource)
+              errors.push(createError(path, na, "min", msg, "now"))
+            }
+            break
+          case "today":
+            const today = getToday()
+            if (t < today.getTime()) {
+              const msg = createMessage(key, "min", "error_from_today", resource, attr.resource)
+              errors.push(createError(path, na, "min", msg, "today"))
+            }
+            break
+          case "tomorrow":
+            const tomorrow = addDays(getToday(), 1)
+            if (t < tomorrow.getTime()) {
+              const msg = createMessage(key, "min", "error_from_tomorrow", resource, attr.resource)
+              errors.push(createError(path, na, "min", msg, "tomorrow"))
+            }
+            break
+          case "yesterday":
+            const yeserday = addDays(getToday(), -1)
+            if (t < yeserday.getTime()) {
+              const msg = createMessage(key, "min", "error_from_yeserday", resource, attr.resource)
+              errors.push(createError(path, na, "min", msg, "yeserday"))
+            }
+            break
+          default:
+            const d = new Date(attr.min)
+            attr.min = d
+            if (t < d.getTime()) {
+              const msg = createMessage(key, "min", "error_min_date", resource, attr.resource, attr.min)
+              errors.push(createError(path, na, "min", msg, attr.min))
+            }
+            break
         }
       }
-    } else if (attr.gt !== undefined) {
+    } else if (attr.gt) {
       if (attr.gt instanceof Date) {
-        if (v.getTime() <= attr.gt.getTime()) {
+        if (t <= attr.gt.getTime()) {
           const msg = createMessage(key, "gt", "error_after", resource, attr.resource, attr.gt)
           errors.push(createError(path, na, "gt", msg, attr.gt))
         }
       } else {
-        if (v.getTime() <= toDateNumber(attr.gt)) {
+        const d = new Date(attr.gt)
+        attr.gt = d
+        if (t <= d.getTime()) {
           const msg = createMessage(key, "gt", "error_after", resource, attr.resource, attr.gt)
           errors.push(createError(path, na, "gt", msg, attr.gt))
         }
       }
     }
-    if (attr.max !== undefined) {
+    if (attr.max) {
       if (attr.max instanceof Date) {
-        if (v.getTime() > attr.max.getTime()) {
+        if (t > attr.max.getTime()) {
           const msg = createMessage(key, "max", "error_max_date", resource, attr.resource, attr.max)
           errors.push(createError(path, na, "max", msg, attr.max))
         }
       } else {
-        if (v.getTime() > toDateNumber(attr.max)) {
-          const msg = createMessage(key, "max", "error_max_date", resource, attr.resource, attr.max)
-          errors.push(createError(path, na, "max", msg, attr.max))
+        switch (attr.max) {
+          case "now":
+            const now = new Date()
+            if (t > now.getTime()) {
+              const msg = createMessage(key, "max", "error_after_now", resource, attr.resource)
+              errors.push(createError(path, na, "max", msg, "now"))
+            }
+            break
+          case "today":
+            const today = getToday()
+            if (t > today.getTime()) {
+              const msg = createMessage(key, "max", "error_after_today", resource, attr.resource)
+              errors.push(createError(path, na, "max", msg, "today"))
+            }
+            break
+          case "tomorrow":
+            const tomorrow = addDays(getToday(), 1)
+            if (t > tomorrow.getTime()) {
+              const msg = createMessage(key, "max", "error_after_tomorrow", resource, attr.resource)
+              errors.push(createError(path, na, "max", msg, "tomorrow"))
+            }
+            break
+          case "yesterday":
+            const yeserday = addDays(getToday(), -1)
+            if (t > yeserday.getTime()) {
+              const msg = createMessage(key, "max", "error_after_yeserday", resource, attr.resource)
+              errors.push(createError(path, na, "max", msg, "yeserday"))
+            }
+            break
+          default:
+            const d = new Date(attr.max)
+            attr.max = d
+            if (t > d.getTime()) {
+              const msg = createMessage(key, "max", "error_max_date", resource, attr.resource, attr.max)
+              errors.push(createError(path, na, "max", msg, attr.max))
+            }
+            break
         }
       }
-    } else if (attr.lt !== undefined) {
+    } else if (attr.lt) {
       if (attr.lt instanceof Date) {
-        if (v.getTime() >= attr.lt.getTime()) {
+        if (t >= attr.lt.getTime()) {
           const msg = createMessage(key, "lt", "error_before", resource, attr.resource, attr.lt)
           errors.push(createError(path, na, "lt", msg, attr.lt))
         }
       } else {
-        if (v.getTime() >= toDateNumber(attr.lt)) {
+        const d = new Date(attr.lt)
+        attr.lt = d
+        if (t >= d.getTime()) {
           const msg = createMessage(key, "lt", "error_before", resource, attr.resource, attr.lt)
           errors.push(createError(path, na, "lt", msg, attr.lt))
         }
       }
     }
   }
-}
-function toDateNumber(s: string | number | Date): number {
-  const d = new Date(s)
-  return d.getTime()
 }
 
 export function createMessage(
