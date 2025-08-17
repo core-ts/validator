@@ -241,7 +241,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 
 </tbody></table>
 
-### 🧠 Key Insights
+### 🔍 Key Insights
 #### ✅ Ajv
 - Top performer with ~6.09 million ops/sec.
 - Best for JSON Schema validation, high-throughput services.
@@ -503,7 +503,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Relative date (now/today/tomorrow/yesterday)</b></td>
 <td>⚠️ Custom keyword</td>
-<td>✅ <code>min: "now"</code></td>
+<td>✅ <code>min: "now" | "today" | "tomorrow" | "yesterday"</code></td>
 <td>⚠️ <code>.refine()</code></td>
 <td>⚠️ <code>.refine()</code></td>
 <td>✅ <code>.min('now')</code> / <code>.max('now')</code> + <code>Date</code> values</td>
@@ -542,7 +542,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 
 </tbody></table>
 
-## Samples
+## 🧱 Samples
 ### Sample 1
 ```typescript
 import { Attributes, StringMap, validate } from "xvalidators"
