@@ -8,7 +8,7 @@
 - It also supports multi-language error handling by allowing custom message injection per field.
 - With no dependencies, it's ideal for both frontend forms (React, Angular, Vue) and backend APIs.
 
-## Key Features
+## 📦 Key Features
 - Data Type validation: string, Date, number, integer, boolean
 - Format validation (for string): email, phone number, URL, IP Address, RegExp
 - Nested Object Validation: Supports deep validation of nested structures
@@ -19,6 +19,8 @@
 - Custom Error Messages: Fully localized/custom error support per field/rule.
 - Multi-language Friendly: Error messages can be defined in any language.
 - Form-friendly: Designed for both backend and frontend use.
+
+### ⚙️ Detailed Features
 
 <table><thead>
 
@@ -132,7 +134,8 @@
 
 </tbody></table>
 
-## Advantages
+## 🛠️ Advantages
+- Rich Features: Yes (Look at below Feature Comparison)
 - JSON Schema Support: Yes
 - Performance: Fast, very lightweight, rule-by-rule
 - Typescript/Javascript Support: Yes
@@ -143,13 +146,13 @@
 - Dependencies: No
 - Learning Curve: Fast (standard JSON Schema)
 
-## Real Samples
+## 🧱 Real Samples
 - Simple Sample: [data-validation-sample](https://github.com/typescript-tutorial/data-validation-sample)
 - Simple REST API Sample: [mongo-simple-modular-sample](https://github.com/source-code-template/mongo-simple-modular-sample)
 - Backoffice Web App: [backoffice](https://github.com/content-system/backoffice)
 - React Sample: [react-cms-backoffice](https://github.com/content-system/react-cms-backoffice)
 
-## Benchmark
+## 🚀 Benchmark
 See the benchmark source code at [data-validation-benchmark](https://github.com/typescript-tutorial/data-validation-benchmark)
 
 <table><thead><tr>
