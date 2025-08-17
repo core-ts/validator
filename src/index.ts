@@ -539,8 +539,8 @@ function validateObject(
               obj[na] = date
               handleMinMax(date, attr, path, errors, key, resource)
             } else {
-              const msg = createMessage(key, "date", "error_date", resource, attr.resource)
-              errors.push(createError(path, na, "date", msg))
+              const msg = createMessage(key, "datetime", "error_datetime", resource, attr.resource)
+              errors.push(createError(path, na, "type", msg, "datetime"))
               return
             }
           }
@@ -554,7 +554,7 @@ function validateObject(
                 handleMinMax(date2, attr, path, errors, key, resource)
               } else {
                 const msg = createMessage(key, "date", "error_date", resource, attr.resource)
-                errors.push(createError(path, na, "date", msg))
+                errors.push(createError(path, na, "type", msg, "date"))
                 return
               }
             }
@@ -660,12 +660,12 @@ function validateObject(
               if (attr.type === "integer") {
                 if (!Number.isInteger(v) || isNaN(v)) {
                   const msg = createMessage(key, "integer", "error_integer", resource, attr.resource)
-                  errors.push(createError(path, na, "integer", msg))
+                  errors.push(createError(path, na, "type", msg, "integer"))
                 }
               } else if (attr.type === "number") {
                 if (isNaN(v)) {
                   const msg = createMessage(key, "number", "error_number", resource, attr.resource)
-                  errors.push(createError(path, na, "number", msg))
+                  errors.push(createError(path, na, "type", msg, "number"))
                 } else {
                   if (!isValidScale(v, attr.scale)) {
                     const msg = createMessage(key, "scale", "error_scale", resource, attr.resource, attr.scale)
@@ -693,7 +693,7 @@ function validateObject(
             case "boolean":
               if (at !== "boolean") {
                 const msg = createMessage(key, "boolean", "error_boolean", resource, attr.resource)
-                errors.push(createError(path, na, at, msg))
+                errors.push(createError(path, na, "type", msg, "boolean"))
                 return
               }
               break
@@ -703,7 +703,7 @@ function validateObject(
                   case "strings": {
                     if (!isStrings(v)) {
                       const msg = createMessage(key, "strings", "error_strings", resource, attr.resource)
-                      errors.push(createError(path, na, "strings", msg))
+                      errors.push(createError(path, na, "type", msg, "strings"))
                     } else {
                       handleArrayMinMax(v.length, attr, path, errors, key, resource)
                       if (attr.enum && attr.enum.length > 0) {
@@ -720,7 +720,7 @@ function validateObject(
                   case "numbers": {
                     if (!isNumbers(v)) {
                       const msg = createMessage(key, "numbers", "error_numbers", resource, attr.resource)
-                      errors.push(createError(path, na, "numbers", msg))
+                      errors.push(createError(path, na, "type", msg, "numbers"))
                     } else {
                       handleArrayMinMax(v.length, attr, path, errors, key, resource)
                       if (attr.enum && attr.enum.length > 0) {
@@ -737,7 +737,7 @@ function validateObject(
                   case "integers": {
                     if (!isIntegers(v)) {
                       const msg = createMessage(key, "integers", "error_integers", resource, attr.resource)
-                      errors.push(createError(path, na, "integers", msg))
+                      errors.push(createError(path, na, "type", msg, "integers"))
                     } else {
                       handleArrayMinMax(v.length, attr, path, errors, key, resource)
                       if (attr.enum && attr.enum.length > 0) {
@@ -754,7 +754,7 @@ function validateObject(
                   case "datetimes": {
                     if (!isDates(v)) {
                       const msg = createMessage(key, "datetimes", "error_datetimes", resource, attr.resource)
-                      errors.push(createError(path, na, "datetimes", msg))
+                      errors.push(createError(path, na, "type", msg, "datetimes"))
                     }
                     break
                   }
@@ -762,7 +762,7 @@ function validateObject(
                     if (resources.ignoreDate) {
                       if (!isDates(v)) {
                         const msg = createMessage(key, "dates", "error_dates", resource, attr.resource)
-                        errors.push(createError(path, na, "dates", msg))
+                        errors.push(createError(path, na, "type", msg, "dates"))
                       }
                     }
                     break
@@ -801,7 +801,7 @@ function validateObject(
                                   if (!isValidDate(date3)) {
                                     const y = path != null && path.length > 0 ? path + "." + key + "[" + i + "]" : key + "[" + i + "]"
                                     const msg = createMessage(key, "date", "error_date", resource, attr.resource)
-                                    const err = createError("", y, "date", msg)
+                                    const err = createError("", y, "type", msg, "date")
                                     errors.push(err)
                                   } else {
                                     v[i] = date3

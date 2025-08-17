@@ -20,6 +20,118 @@
 - Multi-language Friendly: Error messages can be defined in any language.
 - Form-friendly: Designed for both backend and frontend use.
 
+<table><thead>
+
+<tr>
+<th>String</th>
+<th>Number</th>
+<th>Date</th>
+<th>Boolean</th>
+<th>Nested Object</th>
+<th>Array</th>
+</tr></thead><tbody>
+
+<tr>
+<td>✅ Required</td>
+<td>✅ Required</td>
+<td>✅ Required</td>
+<td>✅ Required</td>
+<td>✅ Required</td>
+<td>✅ Required</td>
+</tr>
+
+<tr>
+<td>✅ Enum</td>
+<td>✅ Enum</td>
+<td></td>
+<td></td>
+<td></td>
+<td>✅ Enum</td>
+</tr>
+
+<tr>
+<td>✅ Min Length</td>
+<td>✅ Min </td>
+<td>✅ Min </td>
+<td></td>
+<td></td>
+<td>✅ Min Length</td>
+</tr>
+
+<tr>
+<td>✅ Max Length</td>
+<td>✅ Max</td>
+<td>✅ Max</td>
+<td></td>
+<td></td>
+<td>✅ Max Length</td>
+</tr>
+
+<tr>
+<td>✅ Email</td>
+<td>✅ gt (greater than)</td>
+<td>✅ gt (greater than)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+
+<tr>
+<td>✅ URL</td>
+<td>✅ lt (less than)</td>
+<td>✅ lt (less than)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+
+<tr>
+<td>✅ IP v4</td>
+<td>✅ Precision</td>
+<td>✅ <b>Relative date</b>:</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+
+<tr>
+<td>✅ IP v6</td>
+<td>✅ Scale</td>
+<td>now ✅</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+
+<tr>
+<td>✅ Phone</td>
+<td></td>
+<td>today ✅</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+
+<tr>
+<td>✅ Fax</td>
+<td></td>
+<td>tomorrow ✅</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+
+<tr>
+<td>✅ Regex match</td>
+<td>✅ Integer</td>
+<td>yesterday ✅</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+
+</tbody></table>
+
 ## Advantages
 - JSON Schema Support: Yes
 - Performance: Fast, very lightweight, rule-by-rule
@@ -57,9 +169,9 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>2,484,057</td>
 <td>3.83%</td>
 <td>78</td>
-<td>~114 KB</td>
+<td>📦 ~114 KB</td>
 <td>🏆 1.00× (fastest)</td>
-<td>Fastest + Heavier bundle</td>
+<td>⚡ Fastest + Heavier bundle</td>
 </tr>
 
 <tr>
@@ -68,9 +180,9 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>473,929</td>
 <td>3.66%</td>
 <td>85</td>
-<td>~3.8 KB</td>
+<td>⚡ ~3.8 KB</td>
 <td>~19.1% of Ajv</td>
-<td>Very Fast + Small</td>
+<td>🔥 Very Fast + Small</td>
 </tr>
 
 <tr>
@@ -79,9 +191,9 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>208,463</td>
 <td>3.07%</td>
 <td>78</td>
-<td>~4 KB</td>
+<td>⚡ ~4 KB</td>
 <td>~8.4% of Ajv</td>
-<td>Fast + Small Size</td>
+<td>🐇 Fast + Small Size</td>
 </tr>
 
 <tr>
@@ -90,9 +202,9 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>187,866</td>
 <td>7.54%</td>
 <td>69</td>
-<td>~25 KB</td>
+<td>🧱 ~25 KB</td>
 <td>~7.6% of Ajv</td>
-<td>Fast + Medium Size</td>
+<td>🐇 Fast + Medium Size</td>
 </tr>
 
 <tr>
@@ -101,9 +213,9 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>49,806</td>
 <td>3.49%</td>
 <td>79</td>
-<td>~80 KB</td>
+<td>📦 ~80 KB</td>
 <td>~2.0% of Ajv</td>
-<td>Slow + Heavy Size</td>
+<td>🐢 Slow + Heavy Size</td>
 </tr>
 
 <tr>
@@ -112,9 +224,9 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>30,993</td>
 <td>5.2%</td>
 <td>76</td>
-<td>~28 KB</td>
+<td>🧱 ~28 KB</td>
 <td>~1.2% of Ajv</td>
-<td>Slowest + Medium Size + Frontend-oriented</td>
+<td>🐢 Slowest + Medium Size + Frontend-oriented</td>
 </tr>
 
 </tbody></table>
@@ -191,6 +303,248 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 - If you want typescript + good speed + small: → xvalidators
 - If you prefer a big community support over speed: → Zod or Valibot
 - If you already use Formik or legacy stack: → Yup or Joi
+
+## Feature Compare
+
+<table><thead>
+
+<tr>
+<th>Feature / Library</th>
+<th><b>Ajv</b></th>
+<th><b>Zod</b></th>
+<th><b>Valibot</b></th>
+<th><b>Joi</b></th>
+<th><b>Yup</b></th>
+</tr></thead><tbody>
+
+<tr>
+<td><b>Required</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+
+<tr>
+<td><b>Object / Nested validation</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Array validation</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Default values</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Email</b></td>
+<td>✅ <code>format: "email"</code></td>
+<td>✅ <code>.email()</code></td>
+<td>✅ <code>string([email()])</code></td>
+<td>✅ <code>.email()</code></td>
+<td>✅ <code>.email()</code></td>
+</tr>
+
+<tr>
+<td><b>URL</b></td>
+<td>✅ <code>format: "uri"</code></td>
+<td>✅ <code>.url()</code></td>
+<td>✅ <code>string([url()])</code></td>
+<td>✅ <code>.uri()</code></td>
+<td>✅ <code>.url()</code></td>
+</tr>
+
+<tr>
+<td><b>IPv4 check</b></td>
+<td>✅ <code>format: "ipv4"</code></td>
+<td>⚠️ Regex only</td>
+<td>⚠️ Regex only</td>
+<td>✅ <code>.ip({ version: ["ipv4"] })</code></td>
+<td>⚠️ Regex only</td>
+</tr>
+
+<tr>
+<td><b>IPv6 check</b></td>
+<td>✅ <code>format: "ipv6"</code></td>
+<td>⚠️ Regex only</td>
+<td>⚠️ Regex only</td>
+<td>✅ <code>.ip({ version: ["ipv6"] })</code></td>
+<td>⚠️ Regex only</td>
+</tr>
+
+<tr>
+<td><b>Fax number</b></td>
+<td>⚠️ No built-in — regex only</td>
+<td>⚠️ No built-in — regex only</td>
+<td>⚠️ No built-in — regex only</td>
+<td>⚠️ No built-in — use <code>.pattern()</code> or <code>.custom()</code> with phone regex</td>
+<td>⚠️ No built-in — use <code>.matches()</code> with regex</td>
+</tr>
+
+<tr>
+<td><b>Regex match</b></td>
+<td>✅ <code>pattern</code></td>
+<td>✅ <code>.regex()</code></td>
+<td>✅ <code>string([regex(...)])</code></td>
+<td>✅ <code>.pattern()</code></td>
+<td>✅ <code>.matches()</code></td>
+</tr>
+
+<tr>
+<td><b>Enum values</b></td>
+<td>✅ <code>enum</code></td>
+<td>✅ <code>z.enum([...])</code></td>
+<td>✅ <code>enumType()</code></td>
+<td>✅ <code>.valid(a,b,c)</code></td>
+<td>✅ <code>.oneOf([...])</code></td>
+</tr>
+
+<tr>
+<td><b>Min/Max length (string)</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+
+<tr>
+<td><b>Number type</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Min/Max value (number/date)</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Precision (decimal places)</b></td>
+<td>⚠️ <code>multipleOf</code></td>
+<td>⚠️ <code>.multipleOf()</code> / <code>.refine()</code></td>
+<td>⚠️ <code>.refine()</code></td>
+<td>✅ <code>.precision(n)</code></td>
+<td>⚠️ <code>.test()</code></td>
+</tr>
+
+<tr>
+<td><b>Scale (integer + fraction limits)</b></td>
+<td>⚠️ Custom</td>
+<td>⚠️ Custom</td>
+<td>⚠️ Custom</td>
+<td>⚠️ Partial via <code>.precision()</code> + <code>.max()</code></td>
+<td>⚠️ Custom</td>
+</tr>
+
+<tr>
+<td><b>Date type</b></td>
+<td>✅ <code>format: "date" / "date-time"</code></td>
+<td>✅ <code>z.date()</code> / <code>.datetime()</code></td>
+<td>✅ <code>date()</code></td>
+<td>✅ <code>.date()</code></td>
+<td>✅ <code>.date()</code></td>
+</tr>
+
+<tr>
+<td><b>Relative date (now/today/tomorrow/yesterday)</b></td>
+<td>⚠️ Custom keyword</td>
+<td>⚠️ <code>.refine()</code></td>
+<td>⚠️ <code>.refine()</code></td>
+<td>✅ <code>.min('now')</code> / <code>.max('now')</code> + <code>Date</code> values</td>
+<td>⚠️ Custom <code>.min()</code> / <code>.max()</code></td>
+</tr>
+
+<tr>
+<td><b>Type inference</b></td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+
+<tr>
+<td><b>Transformations</b></td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Async validation</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Schema composition</b></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+
+<tr>
+<td><b>Performance</b></td>
+<td>⚡ Fastest</td>
+<td>🐇 Good</td>
+<td>🐇 Good</td>
+<td>🐢 Slower</td>
+<td>🐢 Slower</td>
+</tr>
+
+<tr>
+<td><b>Bundle size (browser)</b></td>
+<td>Large (~60KB+, tree-shakeable)</td>
+<td>Medium (~20KB)</td>
+<td>Small (~6–8KB)</td>
+<td>Large (~70KB+)</td>
+<td>Medium (~30KB)</td>
+</tr>
+
+<tr>
+<td><b>Best use case</b></td>
+<td>API validation, JSON Schema compliance</td>
+<td>TS-safe runtime validation</td>
+<td>Lightweight TS-safe validation</td>
+<td>Rich backend business rules</td>
+<td>Frontend form validation</td>
+</tr>
+
+</tbody></table>
 
 ## Samples
 ### Sample 1
