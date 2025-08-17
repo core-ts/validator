@@ -304,13 +304,14 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 - If you prefer a big community support over speed: → Zod or Valibot
 - If you already use Formik or legacy stack: → Yup or Joi
 
-## Feature Compare
+## 📊 Feature Comparison
 
 <table><thead>
 
 <tr>
 <th>Feature / Library</th>
 <th><b>Ajv</b></th>
+<th><b>xvalidators</b></th>
 <th><b>Zod</b></th>
 <th><b>Valibot</b></th>
 <th><b>Joi</b></th>
@@ -319,6 +320,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 
 <tr>
 <td><b>Required</b></td>
+<td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
@@ -334,19 +336,12 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
+<td>✅</td>
 </tr>
 
 <tr>
 <td><b>Array validation</b></td>
 <td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-</tr>
-
-<tr>
-<td><b>Default values</b></td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
@@ -357,6 +352,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Email</b></td>
 <td>✅ <code>format: "email"</code></td>
+<td>✅ <code>format: "email"</code></td>
 <td>✅ <code>.email()</code></td>
 <td>✅ <code>string([email()])</code></td>
 <td>✅ <code>.email()</code></td>
@@ -366,6 +362,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>URL</b></td>
 <td>✅ <code>format: "uri"</code></td>
+<td>✅ <code>format: "url"</code></td>
 <td>✅ <code>.url()</code></td>
 <td>✅ <code>string([url()])</code></td>
 <td>✅ <code>.uri()</code></td>
@@ -374,6 +371,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 
 <tr>
 <td><b>IPv4 check</b></td>
+<td>✅ <code>format: "ipv4"</code></td>
 <td>✅ <code>format: "ipv4"</code></td>
 <td>⚠️ Regex only</td>
 <td>⚠️ Regex only</td>
@@ -384,6 +382,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>IPv6 check</b></td>
 <td>✅ <code>format: "ipv6"</code></td>
+<td>✅ <code>format: "ipv6"</code></td>
 <td>⚠️ Regex only</td>
 <td>⚠️ Regex only</td>
 <td>✅ <code>.ip({ version: ["ipv6"] })</code></td>
@@ -391,8 +390,19 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 </tr>
 
 <tr>
+<td><b>Phone number</b></td>
+<td>⚠️ No built-in — regex only</td>
+<td>✅ <code>format: "phone"</code></td>
+<td>⚠️ No built-in — regex only</td>
+<td>⚠️ No built-in — regex only</td>
+<td>⚠️ No built-in — use <code>.pattern()</code> or <code>.custom()</code> with phone regex</td>
+<td>⚠️ No built-in — use <code>.matches()</code> with regex</td>
+</tr>
+
+<tr>
 <td><b>Fax number</b></td>
 <td>⚠️ No built-in — regex only</td>
+<td>✅ <code>format: "fax"</code></td>
 <td>⚠️ No built-in — regex only</td>
 <td>⚠️ No built-in — regex only</td>
 <td>⚠️ No built-in — use <code>.pattern()</code> or <code>.custom()</code> with phone regex</td>
@@ -401,6 +411,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 
 <tr>
 <td><b>Regex match</b></td>
+<td>✅ <code>pattern</code></td>
 <td>✅ <code>pattern</code></td>
 <td>✅ <code>.regex()</code></td>
 <td>✅ <code>string([regex(...)])</code></td>
@@ -411,6 +422,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Enum values</b></td>
 <td>✅ <code>enum</code></td>
+<td>✅ <code>enum</code></td>
 <td>✅ <code>z.enum([...])</code></td>
 <td>✅ <code>enumType()</code></td>
 <td>✅ <code>.valid(a,b,c)</code></td>
@@ -419,6 +431,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 
 <tr>
 <td><b>Min/Max length (string)</b></td>
+<td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
@@ -434,10 +447,12 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
+<td>✅</td>
 </tr>
 
 <tr>
 <td><b>Min/Max value (number/date)</b></td>
+<td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
@@ -448,6 +463,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Precision (decimal places)</b></td>
 <td>⚠️ <code>multipleOf</code></td>
+<td>✅ <code>precision: n</code></td>
 <td>⚠️ <code>.multipleOf()</code> / <code>.refine()</code></td>
 <td>⚠️ <code>.refine()</code></td>
 <td>✅ <code>.precision(n)</code></td>
@@ -457,6 +473,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Scale (integer + fraction limits)</b></td>
 <td>⚠️ Custom</td>
+<td>✅ <code>scale: n</code></td>
 <td>⚠️ Custom</td>
 <td>⚠️ Custom</td>
 <td>⚠️ Partial via <code>.precision()</code> + <code>.max()</code></td>
@@ -466,6 +483,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Date type</b></td>
 <td>✅ <code>format: "date" / "date-time"</code></td>
+<td>✅ <code>type: "date" | "datetime"</code></td>
 <td>✅ <code>z.date()</code> / <code>.datetime()</code></td>
 <td>✅ <code>date()</code></td>
 <td>✅ <code>.date()</code></td>
@@ -475,6 +493,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Relative date (now/today/tomorrow/yesterday)</b></td>
 <td>⚠️ Custom keyword</td>
+<td>✅ <code>min: "now"</code></td>
 <td>⚠️ <code>.refine()</code></td>
 <td>⚠️ <code>.refine()</code></td>
 <td>✅ <code>.min('now')</code> / <code>.max('now')</code> + <code>Date</code> values</td>
@@ -482,44 +501,9 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 </tr>
 
 <tr>
-<td><b>Type inference</b></td>
-<td>❌</td>
-<td>✅</td>
-<td>✅</td>
-<td>❌</td>
-<td>❌</td>
-</tr>
-
-<tr>
-<td><b>Transformations</b></td>
-<td>❌</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-</tr>
-
-<tr>
-<td><b>Async validation</b></td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-</tr>
-
-<tr>
-<td><b>Schema composition</b></td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-</tr>
-
-<tr>
 <td><b>Performance</b></td>
 <td>⚡ Fastest</td>
+<td>🔥 Fast</td>
 <td>🐇 Good</td>
 <td>🐇 Good</td>
 <td>🐢 Slower</td>
@@ -529,6 +513,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Bundle size (browser)</b></td>
 <td>Large (~60KB+, tree-shakeable)</td>
+<td>Small (~4KB)</td>
 <td>Medium (~20KB)</td>
 <td>Small (~6–8KB)</td>
 <td>Large (~70KB+)</td>
@@ -538,6 +523,7 @@ See the benchmark source code at [data-validation-benchmark](https://github.com/
 <tr>
 <td><b>Best use case</b></td>
 <td>API validation, JSON Schema compliance</td>
+<td>API validation, JSON Schema compliance, minimal frontend</td>
 <td>TS-safe runtime validation</td>
 <td>Lightweight TS-safe validation</td>
 <td>Rich backend business rules</td>
